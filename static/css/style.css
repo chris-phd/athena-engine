@@ -1,0 +1,127 @@
+
+/* Chess board squares */
+.rank {
+    display:flex;
+}
+
+main {
+    display: flex;
+}
+
+.padding {
+    flex:1;
+}
+
+.light {
+    background: url("../images/light_square.png");
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 72px;
+    height: 72px;
+}
+
+.dark {
+    background: url("../images/dark_square.png");
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 72px;
+    height: 72px;
+}
+
+/* Chess pieces */
+
+.black-king {
+    background-image: url("../images/black_king.png");
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 72px;
+    height: 72px;
+}
+
+.black-queen {
+    background-image: url("../images/black_queen.png");
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 72px;
+    height: 72px;
+}
+
+.black-bishop {
+    background-image: url("../images/black_bishop.png");
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 72px;
+    height: 72px;
+}
+
+.black-knight {
+    background-image: url("../images/black_knight.png");
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 72px;
+    height: 72px;
+}
+
+.black-rook {
+    background-image: url("../images/black_rook.png");
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 72px;
+    height: 72px;
+}
+
+.black-pawn {
+    background-image: url("../images/black_pawn.png");
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 72px;
+    height: 72px;
+}
+
+.white-king {
+    background-image: url("../images/white_king.png");
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 72px;
+    height: 72px;
+}
+
+.white-queen {
+    background-image: url("../images/white_queen.png");
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 72px;
+    height: 72px;
+}
+
+.white-bishop {
+    background-image: url("../images/white_bishop.png");
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 72px;
+    height: 72px;
+}
+
+.white-knight {
+    background-image: url("../images/white_knight.png");
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 72px;
+    height: 72px;
+}
+
+.white-rook {
+    background-image: url("../images/white_rook.png");
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 72px;
+    height: 72px;
+}
+
+.white-pawn {
+    background-image: url("../images/white_pawn.png");
+    background-repeat: no-repeat;
+    background-size: contain;
+    width: 72px;
+    height: 72px;
+}
