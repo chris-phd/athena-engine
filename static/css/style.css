@@ -1,5 +1,5 @@
 
-/* Chess board squares */
+/* Page layout and chess board squares */
 .rank {
     display:flex;
 }
@@ -8,8 +8,16 @@ main {
     display: flex;
 }
 
-.padding {
-    flex:1;
+.section {
+    display: flex;
+}
+
+.content  {
+    flex: 2;
+}
+
+.board {
+    flex: 5;
 }
 
 .light {
@@ -27,6 +35,9 @@ main {
     width: 72px;
     height: 72px;
 }
+
+/* Config sidebar */
+
 
 /* Chess pieces */
 
