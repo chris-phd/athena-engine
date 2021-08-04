@@ -1,7 +1,14 @@
-// Dynamic import of the rust wasm code
+let lib = null;
+let globalGameState = null;
+
 async function main() {
+
     console.log("Importing the rust wasm code");
-    const lib = await import("../pkg/index.js").catch(console.error);
+    lib = await import("../pkg/index.js").catch(console.error);
+    
+    globalGameState = lib.GameState.new();
+    console.log(globalGameState)
+    // console.log(gameState);
 
     setupPage();
 }
@@ -53,6 +60,14 @@ function resetBoard() {
         fenString = "8/6R1/3n4/8/1r1Q4/8/4p1P1/K1k5 w KQkq - 0 1";
     }
     setBoardFromFenString(fenString);
+
+    // Send the player info to the rust engine...
+    // globalGameState.hello();
+    // localGameState = lib
+    // lib.hello();
+    console.log("globalGameState:");
+    console.log(globalGameState);
+    globalGameState.hello();
 
 }
 
