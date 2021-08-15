@@ -5,10 +5,7 @@ async function main() {
 
     console.log("Importing the rust wasm code");
     lib = await import("../pkg/index.js").catch(console.error);
-    
     globalGameState = lib.GameState.new();
-    console.log(globalGameState)
-    // console.log(gameState);
 
     setupPage();
 }
@@ -60,14 +57,20 @@ function resetBoard() {
         fenString = "8/6R1/3n4/8/1r1Q4/8/4p1P1/K1k5 w KQkq - 0 1";
     }
     setBoardFromFenString(fenString);
+    globalGameState.set_board(fenString);
 
     // Send the player info to the rust engine...
-    // globalGameState.hello();
-    // localGameState = lib
-    // lib.hello();
-    console.log("globalGameState:");
-    console.log(globalGameState);
-    globalGameState.hello();
+
+    // 0 = Human player
+    // 1 = Computer player 
+    let whitePlayerEnum = 0;
+    let blackPlayerEnum = 0;
+    if (whitePlayer == "Computer")
+        whitePlayerEnum = 1;
+    if (blackPlayer == "Computer")
+        blackPlayerEnum = 1;
+
+    globalGameState.set_players(whitePlayerEnum, blackPlayerEnum);
 
 }
 
@@ -82,8 +85,24 @@ function onDragOver(event) {
 }
 
 function onDrop(event) {
+    console.log("js::onDrop: todo!")
     event.preventDefault();
     var id = event.dataTransfer.getData("text/html");
+
+    // Grab the rank and file from the src and destination squares
+    let src_rank = 1;
+    let src_file = 1;
+    let dest_rank = 2;
+    let dest_file = 2;
+    var move_is_legal = globalGameState.is_move_legal(src_rank, src_file, dest_rank, dest_file);
+    if (move_is_legal) {
+        // Update the board
+        globalGameState.make_move(src_rank, src_file, dest_rank, dest_file);
+        var updated_position = globalGameState.get_board();
+        setBoardFromArrayOfEnums(updated_position);
+    } else {
+        // Do nothing
+    }
 
     // Check if this move was a capture
     var square;
@@ -182,6 +201,15 @@ function setBoardFromFenString(fenString) {
             console.log("%s is an unrecognised character", fenString[i]);
         }
     }
+}
+
+function setBoardFromArrayOfEnums(boardPosition) {
+    // boardPosition is a Uint8Array of length 64.
+    // 0 = empty squares, odd num = black, even num = white
+    // 1, 2 = pawn. 3, 4 = knight. 5, 6 = bishop, 7, 8 = rook, 
+    // 9, 10 = queen. 11, 12 = king
+    console.log("js::setBoardFromArrayOfEnums: todo!");
+    console.log(boardPosition);
 }
 
 function clearBoard() {
