@@ -32,12 +32,18 @@ impl ComputerPlayer {
 /// struct implement.
 pub trait Player {
     fn make_move(&self, board: &Board) -> ChessMove;
+    fn is_computer(&self) -> bool;
 }
 
 impl Player for HumanPlayer {
     fn make_move(&self, _board: &Board) -> ChessMove {
-        console_log!("players::HumanPlayer::make_move: todo! ");
+        // Should never reach this. Human moves are entered by the web GUI.
+        console_log!("HumanPlayer::make_move: Should never call this method!");
         return ChessMove::new();
+    }
+
+    fn is_computer(&self) -> bool {
+        return false;
     }
 }
 
@@ -45,5 +51,9 @@ impl Player for ComputerPlayer {
     fn make_move(&self, board: &Board) -> ChessMove {
         console_log!("players::ComputerPlayer::make_move: todo! ");
         return engine::best_move(board);
+    }
+
+    fn is_computer(&self) -> bool {
+        return true;
     }
 }

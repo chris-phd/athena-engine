@@ -89,23 +89,9 @@ function onDrop(event) {
     event.preventDefault();
     var id = event.dataTransfer.getData("text/html");
 
-    // Grab the rank and file from the src and destination squares
-    let src_rank = 1;
-    let src_file = 1;
-    let dest_rank = 2;
-    let dest_file = 2;
-    var move_is_legal = globalGameState.is_move_legal(src_rank, src_file, dest_rank, dest_file);
-    if (move_is_legal) {
-        // Update the board
-        globalGameState.make_move(src_rank, src_file, dest_rank, dest_file);
-        var updated_position = globalGameState.get_board();
-        setBoardFromArrayOfEnums(updated_position);
-    } else {
-        // Do nothing
-    }
-
-    // Check if this move was a capture
-    var square;
+    // Get the source and destination squares
+    var srcSquare = document.getElementById(id).parentElement;
+    var destSquare;
     if (isCaptureMove(event.target)) {
         var capturedPiece = event.target;
         var capturingPiece = document.getElementById(id);
@@ -115,14 +101,33 @@ function onDrop(event) {
             return;
         }
 
-        // Remove the captured piece from the board
-        square = event.target.parentElement;
-        square.removeChild(capturedPiece);
+        destSquare = event.target.parentElement;
     } else {
-        square = event.target;
+        destSquare = event.target;
     }
 
-    square.appendChild(document.getElementById(id));
+    // Grab the rank and file from the src and destination squares
+    var srcSquareCoords = srcSquare.id;
+    var destSquareCoords = destSquare.id;
+    var is_move_legal = globalGameState.is_move_legal(srcSquareCoords, destSquareCoords);
+    if (is_move_legal) {
+        // Update the board
+        globalGameState.make_move(srcSquareCoords, destSquareCoords);
+        updateBoard();
+    } else {
+        // Do nothing?
+    }
+
+    if (globalGameState.is_computer_move()) {
+        makeComputerMove();
+    }
+}
+
+/// Grabs the updated board position from the rust backend and renders to the
+/// browser window.
+function updateBoard() {
+    var updated_position = globalGameState.get_board();
+    setBoardFromArrayOfEnums(updated_position);
 }
 
 function isCaptureMove(htmlElement) {
@@ -210,6 +215,52 @@ function setBoardFromArrayOfEnums(boardPosition) {
     // 9, 10 = queen. 11, 12 = king
     console.log("js::setBoardFromArrayOfEnums: todo!");
     console.log(boardPosition);
+
+    clearBoard();
+
+    for (var i = 0; i < 64; ++i) {
+        var rank = Math.floor((64 - (i+1))/8) + 1; 
+        var file = i%8 + 1;
+        switch (boardPosition[i]) {
+            case 1:
+                setPiece('p', rank, file);
+                break;
+            case 2:
+                setPiece('P', rank, file);
+                break;
+            case 3:
+                setPiece('n', rank, file);
+                break;
+            case 4:
+                setPiece('N', rank, file);
+                break;
+            case 5:
+                setPiece('b', rank, file);
+                break;
+            case 6:
+                setPiece('B', rank, file);
+                break;
+            case 7:
+                setPiece('r', rank, file);
+                break;
+            case 8:
+                setPiece('R', rank, file);
+                break;
+            case 9:
+                setPiece('q', rank, file);
+                break;
+            case 10:
+                setPiece('Q', rank, file);
+                break;
+            case 11:
+                setPiece('k', rank, file);
+                break;
+            case 12:
+                setPiece('K', rank, file);
+                break;
+            default:
+        }
+    }
 }
 
 function clearBoard() {
@@ -280,6 +331,17 @@ function setPiece(pieceAsFenChar, rank, file) {
         console.log("Could not set %s at square %s. Square not found.", htmlId, squareCode);
     }
 
+}
+
+function makeComputerMove() {
+    console.log("js::getComputerMove: ");
+
+    globalGameState.make_computer_move();
+    updateBoard();
+
+    if (globalGameState.is_computer_move()) {
+        makeComputerMove();
+    }
 }
 
 // Helpers

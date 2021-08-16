@@ -1,5 +1,6 @@
 use crate::console_log;
 use crate::utils::log;
+use crate::pieces::ChessMove;
 
 /// The Chess Board. Stores the position of the chess pieces.
 pub struct Board {
@@ -60,26 +61,64 @@ impl Board {
                     finished_piece_positions = true;
                 }
             } else {
-
+                // handle the white to move, castle avaliable characters
             }
         }
     }
 
     /// Returns the current board position as an array of ints. 
-    ///  0 = empty squares, odd num = black, even num = white
-    ///  1, 2 = pawn. 3, 4 = knight. 5, 6 = bishop, 7, 8 = rook, 
-    ///  9, 10 = queen. 11, 12 = king
+    /// 0 = empty squares, odd num = black, even num = white
+    /// 1, 2 = pawn. 3, 4 = knight. 5, 6 = bishop, 7, 8 = rook, 
+    /// 9, 10 = queen. 11, 12 = king
     pub fn get_current_position(&self) -> Vec<u8> {
-        console_log!("board::Board::get_current_position: Implement me!");
-
-        let current_position = vec![0 as u8; 64];
+        console_log!("board::Board::get_current_position:");
+        let mut current_position = vec![0 as u8; 64];
+        for i in 0..64 {
+            match self.squares[i] {
+                'p' => current_position[i] = 1,
+                'P' => current_position[i] = 2,
+                'n' => current_position[i] = 3,
+                'N' => current_position[i] = 4,
+                'b' => current_position[i] = 5,
+                'B' => current_position[i] = 6,
+                'r' => current_position[i] = 7,
+                'R' => current_position[i] = 8,
+                'q' => current_position[i] = 9,
+                'Q' => current_position[i] = 10,
+                'k' => current_position[i] = 11,
+                'K' => current_position[i] = 12,
+                _   => current_position[i] = 0,
+            }
+        }
         return current_position;
+    }
+
+    pub fn make_move(&mut self, chess_move: ChessMove) {
+        console_log!("board::Board::make_move: Finish implementing me!");
+
+        let dest_index = self.square_index(chess_move.dest());
+        let src_index = self.square_index(chess_move.src());
+        self.squares[dest_index] = self.squares[src_index];
+        self.squares[src_index] = '-';
+        // todo! create the cases for the special moves (promotions, 
+        // castles, en passant etc.)
+
+        self.is_white_to_move = !self.is_white_to_move;
+    }
+
+    /// Returns the piece on the square specified by a rank and file. 
+    pub fn get_piece_on_square(&self, rank_file: [usize; 2]) -> char {
+        return self.squares[self.square_index(rank_file)];
     }
 
     /// IMPLEMENT ME! This will be important when validating that the 
     /// front end matches the back end...
     pub fn render(&self) {
         console_log!("board::Board::render: todo!");
+    }
+
+    pub fn white_to_move(&self) -> bool {
+        return self.is_white_to_move;
     }
 
     /// Sets the piece at the square. By convention, uppercase is white,

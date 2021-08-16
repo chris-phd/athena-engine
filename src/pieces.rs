@@ -25,4 +25,12 @@ impl ChessMove {
         // TODO, check the current board position to see if this move
         // is a special move. en_passant / castle move / promotion.
     }
+
+    pub fn src(&self) -> [usize; 2] {
+        return self.src_rank_file;
+    }
+
+    pub fn dest(&self) -> [usize; 2] {
+        return self.dest_rank_file;
+    }
 }

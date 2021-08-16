@@ -11,6 +11,7 @@ use board::{Board, Position};
 use players::{Player, HumanPlayer, ComputerPlayer};
 use utils::log;
 use pieces::ChessMove;
+use utils::coord_to_rank_file;
 
 #[cfg(feature = "wee_alloc")]
 #[global_allocator]
@@ -49,24 +50,57 @@ impl GameState {
         self.board.set_board_from_fen_string(fen_string);
     }
 
-    pub fn is_move_legal(&mut self, src_rank: i32, src_file: i32, 
-        dest_rank: i32, dest_file: i32) -> u8 {
+    pub fn is_move_legal(&mut self, src_coords: &str, dest_coords: &str) -> u8 {
         console_log!("GameState::is_move_legal: todo!");
 
-        let src_rank_file = [src_rank as usize, src_file as usize];
-        let dest_rank_file = [dest_rank as usize, dest_file as usize];
+        let src_rank_file = coord_to_rank_file(src_coords);
+        let dest_rank_file = coord_to_rank_file(dest_coords);
         let mut chess_move = ChessMove::new();
         chess_move.set_move(&self.board, src_rank_file, dest_rank_file);
 
         return rules::is_move_legal(&self.board, &chess_move) as u8;
     }
 
-    pub fn make_move(&mut self, src_rank: i32, src_file: i32, 
-        dest_rank: i32, dest_file: i32) {
+    /// Enters the move entered by a human player
+    pub fn make_move(&mut self, src_coords: &str, dest_coords: &str) {
         console_log!("GameState::make_move: todo!");
 
-        let _src_rank_file = [src_rank as usize, src_file as usize];
-        let _dest_rank_file = [dest_rank as usize, dest_file as usize];
+        let src_rank_file = coord_to_rank_file(src_coords);
+        let dest_rank_file = coord_to_rank_file(dest_coords);
+        let mut chess_move = ChessMove::new();
+        chess_move.set_move(&self.board, src_rank_file, dest_rank_file);
+        self.board.make_move(chess_move);
+
+    }
+
+    /// Calculates and makes a move if it is a computer player's turn to move
+    pub fn make_computer_move(&mut self) {
+        console_log!("lib::GameState::make_computer_move: todo!");
+        let chess_move : ChessMove;
+        if self.board.white_to_move() {
+            chess_move = self.white_player.make_move(&self.board);
+        } else {
+            chess_move = self.black_player.make_move(&self.board);
+        }
+        self.board.make_move(chess_move);
+    }
+
+    /// Returns true if it is a computer's turn to move next
+    pub fn is_computer_move(&self) -> bool {
+        console_log!("GameState::is_computer_move: ");
+
+        if rules::is_checkmate(&self.board) {
+            return false;
+        }
+
+        let computer_move: bool;
+        if self.board.white_to_move() {
+            computer_move = self.white_player.is_computer();
+        } else {
+            computer_move = self.black_player.is_computer();
+        }
+
+        return computer_move;
     }
 
     /// Renders the current gamestate board in ascii text

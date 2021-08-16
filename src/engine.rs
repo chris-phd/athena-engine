@@ -1,5 +1,5 @@
 use crate::console_log;
-use crate::utils::log;
+use crate::utils::{log, coord_to_rank_file};
 use crate::board::Board;
 use crate::pieces::ChessMove;
 use crate::rules::all_possible_moves;
@@ -15,7 +15,12 @@ pub fn _evaluate(_board: &Board) -> i32 {
 pub fn best_move(board: &Board) -> ChessMove {
     console_log!("engine::best_move: todo!");
 
-    let _possible_moves = all_possible_moves(&board);
+    let square_rank_file = [0 as usize; 2];
+    let _possible_moves = all_possible_moves(&board, square_rank_file);
 
-    return ChessMove::new();
+    let mut chess_move = ChessMove::new();
+    let src_rank_file = coord_to_rank_file("e7");
+    let dest_rank_file = coord_to_rank_file("e5");
+    chess_move.set_move(&board, src_rank_file, dest_rank_file);
+    return chess_move;
 }
