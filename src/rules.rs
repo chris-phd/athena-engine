@@ -1,6 +1,6 @@
 use crate::console_log;
 use crate::utils::log;
-use crate::pieces::ChessMove;
+use crate::pieces::{self, ChessMove};
 use crate::board::Board;
 
 /// Checks if the requested move is legal based on the current position
@@ -20,25 +20,42 @@ pub fn is_checkmate(_board: &Board) -> bool {
     return false;
 }
 
-fn pawn_moves() -> Vec<ChessMove> {
-    console_log!("rules::pawn_moves: todo!");
-    let moves = vec![ChessMove::new()];
-    return moves;
-}
-
 /// all_possible_moves: Given a chess board and a square, 
 /// generates all possible chess moves for the piece on that square.
 pub fn all_possible_moves(board: &Board, rank_file: [usize; 2]) -> Vec<ChessMove> {
     console_log!("move_gen::all_possible_moves: todo!");
 
-    // let piece = board.get_piece_on_square(rank_file);
+    let piece = board.get_piece_on_square(rank_file);
+    let is_white = piece.is_uppercase();
+    let piece_type = piece.to_ascii_uppercase();
 
-    // let moves: Vec<ChessMove>;
-    // match piece {
-    //     'p' | 'P' => moves = pawn_moves(),
-    //     _ => moves = panic!(),
-    // }
+    let moves: Vec<ChessMove>;
+    match piece {
+        'P' => moves = pieces::pawn_moves(&board, rank_file, is_white),
+        _ => moves = vec![],
+    }
 
     // return moves;
     return vec![ChessMove::new()];
 } 
+
+/// Tests to see that the rules are working
+#[cfg(test)]
+mod tests {
+    use crate::pieces::ChessMove;
+    use crate::board::{Board, Position};
+    use crate::rules::is_move_legal;
+
+    #[test]
+    fn king_legal_capture() {
+
+        let board = Board::new(Position::TestKing);
+        board.render();
+        let mut requested_move = ChessMove::new();
+
+        eprintln!("Test a regular capture");
+        requested_move.set_move(&board, [1 as usize, 5 as usize], [2 as usize, 4 as usize]);
+        assert!( is_move_legal(&board, &requested_move) );
+
+    }
+}

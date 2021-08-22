@@ -19,9 +19,10 @@ impl Board {
         let set_squares: [char; 64];
         match position {
             Position::StartPosition => set_squares = start_position(),
-            Position::_TestQueen => set_squares = test_queen(),
-            Position::_TestKing => set_squares = test_king(),
+            Position::TestQueen => set_squares = test_queen(),
+            Position::TestKing => set_squares = test_king(),
             Position::_TestKnight => set_squares = test_knight(),
+            Position::TestPawn => set_squares = test_pawn(),
         }
 
         return Board {
@@ -121,6 +122,28 @@ impl Board {
         return self.is_white_to_move;
     }
 
+    /// Methods for checking if a square is free
+    pub fn is_occupied(&self, rank_file: [usize; 2]) -> bool {
+        let piece = self.get_piece_on_square(rank_file);
+        return piece != '-';
+    }
+
+    pub fn is_occupied_by_white(&self, rank_file: [usize; 2]) -> bool {
+        if !self.is_occupied(rank_file) {
+            return false;
+        }
+        let is_white = self.get_piece_on_square(rank_file).is_uppercase();
+        return is_white;
+    }
+
+    pub fn is_occupied_by_black(&self, rank_file: [usize; 2]) -> bool {
+        if !self.is_occupied(rank_file) {
+            return false;
+        }
+        let is_black = !self.get_piece_on_square(rank_file).is_uppercase();
+        return is_black;
+    }
+
     /// Sets the piece at the square. By convention, uppercase is white,
     /// lowercase is a black piece.
     fn set_piece(&mut self, piece: char, rank_file: [usize; 2]) {
@@ -158,9 +181,10 @@ impl Board {
 /// writing the stub for the LegalMoveEnforcer and the Engine??
 pub enum Position {
     StartPosition,
-    _TestQueen,
-    _TestKing,
+    TestQueen,
+    TestKing,
     _TestKnight,
+    TestPawn,
 }
 
 fn start_position() -> [char; 64] {
@@ -205,4 +229,15 @@ fn test_knight() -> [char; 64] {
             '-', '-', '-', '-', '-', '-', '-', 'P',
             '-', '-', '-', 'r', '-', 'P', 'P', '-',
             '-', '-', 'R', '-', '-', '-', '-', '-',];
+}
+
+fn test_pawn() -> [char; 64] {
+    return ['-', '-', '-', '-', '-', '-', '-', '-',
+            '-', '-', '-', '-', 'p', '-', '-', '-',
+            '-', '-', '-', '-', 'K', '-', '-', '-',
+            '-', '-', '-', '-', '-', '-', '-', '-',
+            '-', '-', 'n', '-', '-', '-', '-', '-',
+            '-', 'P', '-', '-', '-', '-', '-', '-',
+            '-', '-', '-', '-', '-', '-', 'P', '-',
+            '-', '-', '-', '-', '-', '-', '-', '-',];
 }
