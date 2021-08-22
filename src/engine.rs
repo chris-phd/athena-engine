@@ -18,9 +18,8 @@ pub fn best_move(board: &Board) -> ChessMove {
     let square_rank_file = [0 as usize; 2];
     let _possible_moves = all_possible_moves(&board, square_rank_file);
 
-    let mut chess_move = ChessMove::new();
     let src_rank_file = coord_to_rank_file("e7");
     let dest_rank_file = coord_to_rank_file("e5");
-    chess_move.set_move(&board, src_rank_file, dest_rank_file);
+    let chess_move = ChessMove::new(&board, src_rank_file, dest_rank_file);
     return chess_move;
 }

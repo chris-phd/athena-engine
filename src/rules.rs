@@ -36,7 +36,7 @@ pub fn all_possible_moves(board: &Board, rank_file: [usize; 2]) -> Vec<ChessMove
     }
 
     // return moves;
-    return vec![ChessMove::new()];
+    return moves;
 } 
 
 /// Tests to see that the rules are working
@@ -46,12 +46,13 @@ mod tests {
     use crate::board::{Board, Position};
     use crate::rules::is_move_legal;
 
+
     #[test]
     fn king_legal_capture() {
 
         let board = Board::new(Position::TestKing);
         board.render();
-        let mut requested_move = ChessMove::new();
+        let mut requested_move = ChessMove::new_empty_move();
 
         eprintln!("Test a regular capture");
         requested_move.set_move(&board, [1 as usize, 5 as usize], [2 as usize, 4 as usize]);

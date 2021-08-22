@@ -2,19 +2,6 @@ use crate::console_log;
 use crate::utils::log;
 use crate::board::Board;
 
-///
-pub struct Piece {
-    is_white: bool,
-}
-
-pub struct King {
-    is_white: bool,
-}
-
-pub struct Pawn {
-    is_white: bool,
-}
-
 /// DeltaRankFile. Defines one possible piece movement as a 
 /// change in rank and file from the current square. 
 pub struct DeltaRankFile {
@@ -23,106 +10,15 @@ pub struct DeltaRankFile {
 }
 
 impl DeltaRankFile {
+    /// Returns an invalid square [0, 0] if destination square is off the board
     pub fn dest_from_src(&self, src_rank_file: [usize; 2]) -> [usize; 2] {
-        return [(src_rank_file[0] as i32 + self.delta_rank) as usize,
-                (src_rank_file[1] as i32 + self.delta_file) as usize];
-    }
-}
-
-/// Movement. Defines how each of the pieces move. Common for all pieces
-pub trait Movement {
-    /// Returns a piece's moveset for most considitions
-    fn standard_moves(&self) -> Vec<DeltaRankFile>;
-
-    /// True for pawns and kings. Deals with pawn captures and king castle movements.
-    fn has_special_moves(&self) -> bool;
-
-    /// True for bishop, rook and queen
-    fn is_sliding_piece(&self) -> bool;
-}
-
-impl Movement for King {
-    fn standard_moves(&self) -> Vec<DeltaRankFile> {
-        let standard_moves = vec![
-            DeltaRankFile { delta_rank: -1, delta_file:  1},
-            DeltaRankFile { delta_rank: -1, delta_file:  0},
-            DeltaRankFile { delta_rank: -1, delta_file: -1},
-            DeltaRankFile { delta_rank:  0, delta_file: -1},
-            DeltaRankFile { delta_rank:  0, delta_file:  1},
-            DeltaRankFile { delta_rank:  1, delta_file: -1},
-            DeltaRankFile { delta_rank:  1, delta_file:  0},
-            DeltaRankFile { delta_rank:  1, delta_file:  1},
-        ];
-        return standard_moves;
-    }
-
-    fn has_special_moves(&self) -> bool {
-        // King castle moves are not in the standard moveset
-        return true;
-    }
-
-    fn is_sliding_piece(&self) -> bool {
-        return false;
-    }
-}
-
-impl Movement for Pawn {
-    fn standard_moves(&self) -> Vec<DeltaRankFile> {
-        let standard_moves;
-        if self.is_white {
-            standard_moves = vec![
-                DeltaRankFile {delta_rank:  1, delta_file:  0},
-                DeltaRankFile {delta_rank:  2, delta_file:  0},
-            ];
-        } else {
-            standard_moves = vec![
-                DeltaRankFile {delta_rank:  -1, delta_file:  0},
-                DeltaRankFile {delta_rank:  -2, delta_file:  0},
-            ];
+        let dest = [(src_rank_file[0] as i32 + self.delta_rank),
+                   (src_rank_file[1] as i32 + self.delta_file)];
+        if dest[0] > 8 || dest[0] < 1 || dest[1] > 8 || dest[1] < 1 {
+            return [0, 0];
         }
-    
-        return standard_moves;
-    }
-
-    fn has_special_moves(&self) -> bool {
-        // Pawn captures are not in the standard moveset
-        return true;
-    }
-
-    fn is_sliding_piece(&self) -> bool {
-        // Since a pawn can move two squares on the first move.
-        return true;
-    }
-}
-
-// Implementation specific to each piece
-impl King {
-    fn castle_moves(&self) -> Vec<DeltaRankFile> {
-        let castle_movements = vec![
-            DeltaRankFile { delta_rank:  0, delta_file: -3},
-            DeltaRankFile { delta_rank:  0, delta_file: -2},
-            DeltaRankFile { delta_rank:  0, delta_file:  2},
-            DeltaRankFile { delta_rank:  0, delta_file:  3},
-        ];
-        return castle_movements;
-    }
-}
-
-impl Pawn {
-    fn capture_moves(&self) -> Vec<DeltaRankFile> {
-        let capture_movements;
-        if self.is_white {
-            capture_movements = vec![
-                DeltaRankFile {delta_rank:  1, delta_file: -1},
-                DeltaRankFile {delta_rank:  1, delta_file:  1},
-            ];
-        } else {
-            capture_movements = vec![
-                DeltaRankFile {delta_rank:  -1, delta_file: -1},
-                DeltaRankFile {delta_rank:  -1, delta_file:  1},
-            ];
-        }
-        return capture_movements;
+        
+        return [dest[0] as usize, dest[1] as usize];
     }
 }
 
@@ -133,7 +29,13 @@ pub struct ChessMove {
 }
 
 impl ChessMove {
-    pub fn new() -> ChessMove {
+    pub fn new(board: &Board, src: [usize; 2], dest: [usize; 2]) -> ChessMove {
+        let mut new_move = ChessMove::new_empty_move();
+        new_move.set_move(&board, src, dest);
+        return new_move;
+    }
+
+    pub fn new_empty_move() -> ChessMove {
         return ChessMove {
             src_rank_file: [0, 0],
             dest_rank_file: [0, 0],
@@ -187,9 +89,8 @@ fn pawn_capture_moves(board: &Board, rank_file: [usize; 2], is_white: bool) -> V
 
     for capture_movement in capture_movements {
         let dest_rank_file = capture_movement.dest_from_src(rank_file);
-        if is_capture(&board, is_white, dest_rank_file) {
-            let mut possible_move = ChessMove::new();
-            possible_move.set_move(&board, rank_file, dest_rank_file);
+        if is_capture(&board, dest_rank_file, is_white) {
+            let possible_move = ChessMove::new(&board, rank_file, dest_rank_file);
             non_capture_moves.push(possible_move);
         }
     }
@@ -198,7 +99,7 @@ fn pawn_capture_moves(board: &Board, rank_file: [usize; 2], is_white: bool) -> V
 }
 
 /// Returns all possible non capture pawn moves from a given square. 
-fn pawn_non_capture_moves(board: &Board, rank_file: [usize; 2], is_white: bool) -> Vec<ChessMove> {
+fn pawn_non_capture_moves(board: &Board, src_rank_file: [usize; 2], is_white: bool) -> Vec<ChessMove> {
     let mut non_capture_moves : Vec<ChessMove> = vec![];
 
     let non_capture_movements;
@@ -215,13 +116,12 @@ fn pawn_non_capture_moves(board: &Board, rank_file: [usize; 2], is_white: bool) 
     }
 
     for non_capture_movement in non_capture_movements {
-        let dest_rank_file = non_capture_movement.dest_from_src(rank_file);
+        let dest_rank_file = non_capture_movement.dest_from_src(src_rank_file);
         if board.is_occupied(dest_rank_file) {
             continue;
         }
-        if is_slide_clear_for_non_capture(&board, rank_file, dest_rank_file) {
-            let mut possible_move = ChessMove::new();
-            possible_move.set_move(&board, rank_file, dest_rank_file);
+        if is_slide_clear_for_non_capture(&board, src_rank_file, dest_rank_file) {
+            let possible_move = ChessMove::new(&board, src_rank_file, dest_rank_file);
             non_capture_moves.push(possible_move);
         }
     }
@@ -229,8 +129,37 @@ fn pawn_non_capture_moves(board: &Board, rank_file: [usize; 2], is_white: bool) 
     return non_capture_moves;
 }
 
+/// Returns all knight moves from a given square
+fn knight_moves(board: &Board, src_rank_file: [usize; 2], is_white: bool) -> Vec<ChessMove> {
+    let mut all_possible_moves : Vec<ChessMove> = vec![];
+
+    let movements = vec![
+        DeltaRankFile { delta_rank: -1, delta_file:  2, },
+        DeltaRankFile { delta_rank:  1, delta_file:  2, },
+        DeltaRankFile { delta_rank:  1, delta_file: -2, },
+        DeltaRankFile { delta_rank: -1, delta_file: -2, },
+        DeltaRankFile { delta_rank: -2, delta_file:  1, },
+        DeltaRankFile { delta_rank:  2, delta_file:  1, },
+        DeltaRankFile { delta_rank:  2, delta_file: -1, },
+        DeltaRankFile { delta_rank: -2, delta_file: -1, },
+    ];
+
+    for movement in movements {
+        let dest_rank_file = movement.dest_from_src(src_rank_file);
+        if !board.is_valid_rank_file(dest_rank_file) {
+            continue;
+        }
+        if !board.is_occupied(dest_rank_file) || is_capture(&board, dest_rank_file, is_white) {
+            let possible_move = ChessMove::new(&board, src_rank_file, dest_rank_file);
+            all_possible_moves.push(possible_move);
+        }
+    }
+
+    return all_possible_moves;
+}
+
 /// Checks if a square is occupied by a piece of a different colour.
-fn is_capture(board : &Board, is_white: bool, dest_rank_file: [usize; 2]) -> bool {
+fn is_capture(board : &Board, dest_rank_file: [usize; 2], is_white: bool) -> bool {
     return (is_white && board.is_occupied_by_black(dest_rank_file)) ||
            (!is_white && board.is_occupied_by_white(dest_rank_file));
 }
@@ -251,7 +180,7 @@ fn is_slide_clear_for_non_capture(board: &Board, src: [usize; 2], dest: [usize; 
         }
 
         // Check if we have traversed past the edge of the board
-        if traversed[0] > 8 || traversed[0] < 1 || traversed[1] > 8 || traversed[1] < 1 {
+        if !board.is_valid_rank_file(traversed) {
             console_log!("[pieces::is_slide_clear]: ERROR! Tried to check a square off the edge of the board.");
             return false;
         }
@@ -278,7 +207,6 @@ fn is_slide_clear_for_capture(board: &Board, src: [usize; 2], dest: [usize; 2]) 
     return is_slide_clear_for_non_capture(&board, src, new_dest);
 }
 
-/// Tests to see that the rules are working
 #[cfg(test)]
 mod tests {
     use crate::console_log;
@@ -313,5 +241,17 @@ mod tests {
         src = [7 as usize, 5 as usize];
         is_white = false;
         assert_eq!( pieces::pawn_moves(&board, src, is_white).len(), 0);
+    }
+
+    #[test]
+    fn possible_knight_moves() {
+        let board = Board::new(Position::TestKnight);
+        let mut src = [4 as usize, 3 as usize];
+        let mut is_white = true;
+        assert_eq!( pieces::knight_moves(&board, src, is_white).len(), 6);
+
+        src = [1 as usize, 8 as usize];
+        is_white = true;
+        assert_eq!( pieces::knight_moves(&board, src, is_white).len(), 2);
     }
 }

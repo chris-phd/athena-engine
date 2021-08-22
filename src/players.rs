@@ -39,7 +39,7 @@ impl Player for HumanPlayer {
     fn make_move(&self, _board: &Board) -> ChessMove {
         // Should never reach this. Human moves are entered by the web GUI.
         console_log!("HumanPlayer::make_move: Should never call this method!");
-        return ChessMove::new();
+        return ChessMove::new_empty_move();
     }
 
     fn is_computer(&self) -> bool {

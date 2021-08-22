@@ -21,7 +21,7 @@ impl Board {
             Position::StartPosition => set_squares = start_position(),
             Position::TestQueen => set_squares = test_queen(),
             Position::TestKing => set_squares = test_king(),
-            Position::_TestKnight => set_squares = test_knight(),
+            Position::TestKnight => set_squares = test_knight(),
             Position::TestPawn => set_squares = test_pawn(),
         }
 
@@ -144,6 +144,10 @@ impl Board {
         return is_black;
     }
 
+    pub fn is_valid_rank_file(&self, rank_file: [usize; 2]) -> bool {
+        return !(rank_file[0] > 8 || rank_file[0] < 1 || rank_file[1] > 8 || rank_file[1] < 1);
+    }
+
     /// Sets the piece at the square. By convention, uppercase is white,
     /// lowercase is a black piece.
     fn set_piece(&mut self, piece: char, rank_file: [usize; 2]) {
@@ -183,7 +187,7 @@ pub enum Position {
     StartPosition,
     TestQueen,
     TestKing,
-    _TestKnight,
+    TestKnight,
     TestPawn,
 }
 
@@ -221,14 +225,14 @@ fn test_king() -> [char; 64] {
 }
 
 fn test_knight() -> [char; 64] {
-    return ['-', '-', '-', '-', '-', '-', '-', 'B',
+    return ['-', '-', '-', '-', '-', '-', '-', '-',
             '-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', '-', '-', 'n', '-', '-',
+            '-', '-', '-', '-', '-', '-', '-', '-',
             '-', '-', '-', '-', '-', '-', '-', '-',
             '-', '-', 'N', '-', '-', '-', '-', '-',
-            '-', '-', '-', '-', '-', '-', '-', 'P',
-            '-', '-', '-', 'r', '-', 'P', 'P', '-',
-            '-', '-', 'R', '-', '-', '-', '-', '-',];
+            'P', '-', '-', '-', '-', '-', '-', '-',
+            '-', 'P', '-', 'r', '-', '-', 'p', 'p',
+            '-', '-', '-', '-', '-', '-', '-', 'n',];
 }
 
 fn test_pawn() -> [char; 64] {

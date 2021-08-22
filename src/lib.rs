@@ -55,9 +55,7 @@ impl GameState {
 
         let src_rank_file = coord_to_rank_file(src_coords);
         let dest_rank_file = coord_to_rank_file(dest_coords);
-        let mut chess_move = ChessMove::new();
-        chess_move.set_move(&self.board, src_rank_file, dest_rank_file);
-
+        let chess_move = ChessMove::new(&self.board, src_rank_file, dest_rank_file);
         return rules::is_move_legal(&self.board, &chess_move) as u8;
     }
 
@@ -67,8 +65,7 @@ impl GameState {
 
         let src_rank_file = coord_to_rank_file(src_coords);
         let dest_rank_file = coord_to_rank_file(dest_coords);
-        let mut chess_move = ChessMove::new();
-        chess_move.set_move(&self.board, src_rank_file, dest_rank_file);
+        let chess_move = ChessMove::new(&self.board, src_rank_file, dest_rank_file);
         self.board.make_move(chess_move);
 
     }
