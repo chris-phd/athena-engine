@@ -130,7 +130,7 @@ fn pawn_non_capture_moves(board: &Board, src_rank_file: [usize; 2], is_white: bo
 }
 
 /// Returns all knight moves from a given square
-fn knight_moves(board: &Board, src_rank_file: [usize; 2], is_white: bool) -> Vec<ChessMove> {
+pub fn knight_moves(board: &Board, src_rank_file: [usize; 2], is_white: bool) -> Vec<ChessMove> {
     let mut all_possible_moves : Vec<ChessMove> = vec![];
 
     let movements = vec![
@@ -146,10 +146,8 @@ fn knight_moves(board: &Board, src_rank_file: [usize; 2], is_white: bool) -> Vec
 
     for movement in movements {
         let dest_rank_file = movement.dest_from_src(src_rank_file);
-        if !board.is_valid_rank_file(dest_rank_file) {
-            continue;
-        }
-        if !board.is_occupied(dest_rank_file) || is_capture(&board, dest_rank_file, is_white) {
+        if board.is_valid_rank_file(dest_rank_file) && 
+           (!board.is_occupied(dest_rank_file) || is_capture(&board, dest_rank_file, is_white) ) {
             let possible_move = ChessMove::new(&board, src_rank_file, dest_rank_file);
             all_possible_moves.push(possible_move);
         }
@@ -158,10 +156,67 @@ fn knight_moves(board: &Board, src_rank_file: [usize; 2], is_white: bool) -> Vec
     return all_possible_moves;
 }
 
-/// Checks if a square is occupied by a piece of a different colour.
+/// Returns all the bishop moves from a given square
+pub fn bishop_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMove> {
+    let movements = vec![
+        DeltaRankFile { delta_rank: -1, delta_file:  1, },
+        DeltaRankFile { delta_rank:  1, delta_file:  1, },
+        DeltaRankFile { delta_rank:  1, delta_file: -1, },
+        DeltaRankFile { delta_rank: -1, delta_file: -1, },
+    ];
+
+    return slide_moves(movements, &board, src, is_white);
+}
+
+/// Returns all possible rook moves from a given square
+pub fn rook_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMove> {
+    let movements = vec![
+        DeltaRankFile { delta_rank: -1, delta_file:  0, },
+        DeltaRankFile { delta_rank:  0, delta_file:  1, },
+        DeltaRankFile { delta_rank:  0, delta_file: -1, },
+        DeltaRankFile { delta_rank:  1, delta_file:  0, },
+    ];
+
+    return slide_moves(movements, &board, src, is_white);
+}
+
+/// Returns all possible queen moves from a given square
+pub fn queen_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMove> {
+    let mut all_possible_moves = rook_moves(&board, src, is_white);
+    all_possible_moves.append(&mut bishop_moves(&board, src, is_white));
+    return all_possible_moves;
+}
+
+/// Generates all possible moves from a square by sliding in the given directions.
+/// Used to generate the bishop and rook moves
+fn slide_moves(movements: Vec<DeltaRankFile>, board: &Board, src: [usize; 2], is_white: bool)-> Vec<ChessMove> {
+    let mut all_possible_moves : Vec<ChessMove> = vec![];
+
+    for movement in movements {
+        let mut dest = movement.dest_from_src(src);
+        while board.is_valid_rank_file(dest) && 
+              (!board.is_occupied(dest) || is_capture(&board, dest, is_white) ) {
+
+            let possible_move = ChessMove::new(&board, src, dest);
+            all_possible_moves.push(possible_move);
+            
+            if (is_capture(&board, dest, is_white)) {
+                break;
+            }
+
+            dest = movement.dest_from_src(dest);
+        }
+    }
+
+    return all_possible_moves;
+}
+
+/// Checks if a square is occupied by a piece of a different colour, and if it is 
+/// occupied by the king. The king can never be captured.
 fn is_capture(board : &Board, dest_rank_file: [usize; 2], is_white: bool) -> bool {
-    return (is_white && board.is_occupied_by_black(dest_rank_file)) ||
-           (!is_white && board.is_occupied_by_white(dest_rank_file));
+    return ((is_white && board.is_occupied_by_black(dest_rank_file)) ||
+           (!is_white && board.is_occupied_by_white(dest_rank_file)) ) && 
+           !board.is_occupied_by_king(dest_rank_file);
 }
 
 
@@ -253,5 +308,29 @@ mod tests {
         src = [1 as usize, 8 as usize];
         is_white = true;
         assert_eq!( pieces::knight_moves(&board, src, is_white).len(), 2);
+    }
+
+    #[test]
+    fn possible_queen_moves() {
+        let board = Board::new(Position::TestQueen);
+        let mut src = [5 as usize, 4 as usize];
+        let mut is_white = false;
+        assert_eq!( pieces::queen_moves(&board, src, is_white).len(), 1+3+2+2+4+3+3+3);
+
+        src = [1 as usize, 8 as usize];
+        is_white = true;
+        assert_eq!( pieces::queen_moves(&board, src, is_white).len(), 3);
+    }
+
+    #[test]
+    fn possible_rook_moves() {
+        let board = Board::new(Position::TestRook);
+        let mut src = [5 as usize, 4 as usize];
+        let mut is_white = false;
+        assert_eq!( pieces::rook_moves(&board, src, is_white).len(), 1+2+3+4);
+
+        src = [1 as usize, 8 as usize];
+        is_white = true;
+        assert_eq!( pieces::rook_moves(&board, src, is_white).len(), 2);
     }
 }

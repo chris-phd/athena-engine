@@ -21,6 +21,7 @@ impl Board {
             Position::StartPosition => set_squares = start_position(),
             Position::TestQueen => set_squares = test_queen(),
             Position::TestKing => set_squares = test_king(),
+            Position::TestRook => set_squares = test_rook(),
             Position::TestKnight => set_squares = test_knight(),
             Position::TestPawn => set_squares = test_pawn(),
         }
@@ -144,6 +145,11 @@ impl Board {
         return is_black;
     }
 
+    pub fn is_occupied_by_king(&self, rank_file: [usize; 2]) -> bool {
+        let piece = self.get_piece_on_square(rank_file);
+        return piece == 'k' || piece == 'K';
+    }
+
     pub fn is_valid_rank_file(&self, rank_file: [usize; 2]) -> bool {
         return !(rank_file[0] > 8 || rank_file[0] < 1 || rank_file[1] > 8 || rank_file[1] < 1);
     }
@@ -187,6 +193,7 @@ pub enum Position {
     StartPosition,
     TestQueen,
     TestKing,
+    TestRook,
     TestKnight,
     TestPawn,
 }
@@ -209,8 +216,8 @@ fn test_queen() -> [char; 64] {
             '-', '-', '-', 'q', '-', 'P', '-', '-',
             '-', '-', '-', '-', '-', '-', '-', '-',
             '-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', '-', '-', '-', '-', '-',];
+            '-', '-', '-', '-', '-', '-', 'n', 'p',
+            '-', '-', '-', '-', '-', 'k', '-', 'Q',];
 }
 
 fn test_king() -> [char; 64] {
@@ -244,4 +251,15 @@ fn test_pawn() -> [char; 64] {
             '-', 'P', '-', '-', '-', '-', '-', '-',
             '-', '-', '-', '-', '-', '-', 'P', '-',
             '-', '-', '-', '-', '-', '-', '-', '-',];
+}
+
+fn test_rook() -> [char; 64] {
+    return ['-', '-', '-', '-', '-', '-', '-', '-',
+            '-', '-', '-', 'p', '-', '-', '-', '-',
+            '-', '-', '-', '-', '-', '-', '-', '-',
+            '-', '-', '-', 'r', '-', 'P', '-', '-',
+            '-', '-', '-', '-', '-', '-', '-', '-',
+            '-', '-', '-', '-', '-', '-', '-', '-',
+            '-', '-', '-', '-', '-', '-', 'n', 'p',
+            '-', '-', '-', '-', '-', 'Q', '-', 'R',];
 }

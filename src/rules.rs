@@ -31,6 +31,7 @@ pub fn all_possible_moves(board: &Board, rank_file: [usize; 2]) -> Vec<ChessMove
 
     let moves: Vec<ChessMove>;
     match piece {
+        'N' => moves = pieces::knight_moves(&board, rank_file, is_white),
         'P' => moves = pieces::pawn_moves(&board, rank_file, is_white),
         _ => moves = vec![],
     }
