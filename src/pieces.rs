@@ -23,9 +23,11 @@ impl DeltaRankFile {
 }
 
 /// ChessMove, represents a move made by a player
+#[derive(Clone, Copy)]
 pub struct ChessMove {
     src_rank_file: [usize; 2],
     dest_rank_file: [usize; 2],
+    piece: char,
 }
 
 impl ChessMove {
@@ -39,15 +41,17 @@ impl ChessMove {
         return ChessMove {
             src_rank_file: [0, 0],
             dest_rank_file: [0, 0],
+            piece: '-',
         }
     }
 
-    pub fn set_move(&mut self, _board: &Board, src_rank_file: [usize; 2], 
+    pub fn set_move(&mut self, board: &Board, src_rank_file: [usize; 2], 
         dest_rank_file: [usize; 2]) {
         console_log!("pieces::ChessMove::set_move: todo!");
         
         self.src_rank_file = src_rank_file;
         self.dest_rank_file = dest_rank_file;
+        self.piece = board.get_piece_on_square(src_rank_file);
 
         // TODO, check the current board position to see if this move
         // is a special move. en_passant / castle move / promotion.
@@ -60,10 +64,19 @@ impl ChessMove {
     pub fn dest(&self) -> [usize; 2] {
         return self.dest_rank_file;
     }
+
+    pub fn is_the_same_as(&self, that: &ChessMove) -> bool {
+
+        let is_same_squares = self.src_rank_file == that.src_rank_file && 
+                            self.dest_rank_file == that.dest_rank_file;
+        let is_same_piece = self.piece == that.piece;
+        return is_same_piece && is_same_squares;
+    }
 }
 
 /// Returns all possible pawn moves from a given square
 pub fn pawn_moves(board: &Board, rank_file: [usize; 2], is_white: bool) -> Vec<ChessMove> {
+    console_log!("pieces::pawn_moves:");
     let mut all_possible_moves = pawn_capture_moves(&board, rank_file, is_white);
     all_possible_moves.append(&mut pawn_non_capture_moves(&board, rank_file, is_white));
     return all_possible_moves;
@@ -89,7 +102,8 @@ fn pawn_capture_moves(board: &Board, rank_file: [usize; 2], is_white: bool) -> V
 
     for capture_movement in capture_movements {
         let dest_rank_file = capture_movement.dest_from_src(rank_file);
-        if is_capture(&board, dest_rank_file, is_white) {
+        if board.is_valid_rank_file(dest_rank_file) &&
+           is_capture(&board, dest_rank_file, is_white) {
             let possible_move = ChessMove::new(&board, rank_file, dest_rank_file);
             non_capture_moves.push(possible_move);
         }
@@ -117,7 +131,11 @@ fn pawn_non_capture_moves(board: &Board, src_rank_file: [usize; 2], is_white: bo
 
     for non_capture_movement in non_capture_movements {
         let dest_rank_file = non_capture_movement.dest_from_src(src_rank_file);
-        if board.is_occupied(dest_rank_file) {
+
+        console_log!("    pawn move dest = {:?}", dest_rank_file);
+
+        if !board.is_valid_rank_file(dest_rank_file) ||
+           board.is_occupied(dest_rank_file) {
             continue;
         }
         if is_slide_clear_for_non_capture(&board, src_rank_file, dest_rank_file) {
@@ -131,6 +149,7 @@ fn pawn_non_capture_moves(board: &Board, src_rank_file: [usize; 2], is_white: bo
 
 /// Returns all knight moves from a given square
 pub fn knight_moves(board: &Board, src_rank_file: [usize; 2], is_white: bool) -> Vec<ChessMove> {
+    console_log!("pieces::knight_moves:");
     let mut all_possible_moves : Vec<ChessMove> = vec![];
 
     let movements = vec![
@@ -158,6 +177,7 @@ pub fn knight_moves(board: &Board, src_rank_file: [usize; 2], is_white: bool) ->
 
 /// Returns all the bishop moves from a given square
 pub fn bishop_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMove> {
+    console_log!("pieces::bishop_moves: ");
     let movements = vec![
         DeltaRankFile { delta_rank: -1, delta_file:  1, },
         DeltaRankFile { delta_rank:  1, delta_file:  1, },
@@ -170,6 +190,7 @@ pub fn bishop_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<Chess
 
 /// Returns all possible rook moves from a given square
 pub fn rook_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMove> {
+    console_log!("pieces::rook_moves: ");
     let movements = vec![
         DeltaRankFile { delta_rank: -1, delta_file:  0, },
         DeltaRankFile { delta_rank:  0, delta_file:  1, },
@@ -182,6 +203,7 @@ pub fn rook_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMo
 
 /// Returns all possible queen moves from a given square
 pub fn queen_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMove> {
+    console_log!("pieces::queen_moves:");
     let mut all_possible_moves = rook_moves(&board, src, is_white);
     all_possible_moves.append(&mut bishop_moves(&board, src, is_white));
     return all_possible_moves;
@@ -296,6 +318,11 @@ mod tests {
         src = [7 as usize, 5 as usize];
         is_white = false;
         assert_eq!( pieces::pawn_moves(&board, src, is_white).len(), 0);
+
+
+        src = [7 as usize, 8 as usize];
+        is_white = false;
+        assert_eq!( pieces::pawn_moves(&board, src, is_white).len(), 2);
     }
 
     #[test]

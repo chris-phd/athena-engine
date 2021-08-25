@@ -213,7 +213,6 @@ function setBoardFromArrayOfEnums(boardPosition) {
     // 0 = empty squares, odd num = black, even num = white
     // 1, 2 = pawn. 3, 4 = knight. 5, 6 = bishop, 7, 8 = rook, 
     // 9, 10 = queen. 11, 12 = king
-    console.log("js::setBoardFromArrayOfEnums: todo!");
     console.log(boardPosition);
 
     clearBoard();

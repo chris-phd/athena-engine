@@ -4,14 +4,26 @@ use crate::pieces::{self, ChessMove};
 use crate::board::Board;
 
 /// Checks if the requested move is legal based on the current position
-pub fn is_move_legal(board: &Board, chess_move: &ChessMove) -> bool {
-    console_log!("rules::is_move_legal: todo!");
+pub fn is_move_legal(board: &Board, requested_move: &ChessMove) -> bool {
+    console_log!("rules::is_move_legal: ");
     
-    let _possible_moves = all_possible_moves(board, chess_move.src());
+    let possible_moves = all_possible_moves(board, requested_move.src());
 
-    // check if chess_move is in the set of all_possible_moves
+    let mut is_legal = false;
+    for possible_move in possible_moves {
+        if requested_move.is_the_same_as(&possible_move) {
+            is_legal = true;
+            break;
+        }
+    }
 
-    return true;
+    if is_legal {
+        console_log!("    move IS legal");
+    } else {
+        console_log!("    move is NOT legal");
+    }
+
+    return is_legal;
 }
 
 /// Checks if the current position is checkmate
@@ -23,17 +35,20 @@ pub fn is_checkmate(_board: &Board) -> bool {
 /// all_possible_moves: Given a chess board and a square, 
 /// generates all possible chess moves for the piece on that square.
 pub fn all_possible_moves(board: &Board, rank_file: [usize; 2]) -> Vec<ChessMove> {
-    console_log!("move_gen::all_possible_moves: todo!");
+    console_log!("move_gen::all_possible_moves:");
 
     let piece = board.get_piece_on_square(rank_file);
     let is_white = piece.is_uppercase();
     let piece_type = piece.to_ascii_uppercase();
 
     let moves: Vec<ChessMove>;
-    match piece {
+    match piece_type {
+        'Q' => moves = pieces::queen_moves(&board, rank_file, is_white),
+        'R' => moves = pieces::rook_moves(&board, rank_file, is_white),
+        'B' => moves = pieces::bishop_moves(&board, rank_file, is_white),
         'N' => moves = pieces::knight_moves(&board, rank_file, is_white),
         'P' => moves = pieces::pawn_moves(&board, rank_file, is_white),
-        _ => moves = vec![],
+        _ => panic!(),
     }
 
     // return moves;

@@ -1,4 +1,6 @@
 use wasm_bindgen::prelude::*;
+use js_sys::Math;
+extern crate console_error_panic_hook;
 
 mod board;
 mod engine;
@@ -31,6 +33,10 @@ pub struct GameState {
 impl GameState {
     pub fn new() -> GameState {
         console_log!("GameState::new:");
+
+        // For better rust error messages from the browser
+        console_error_panic_hook::set_once();
+
         return GameState {
             board: Board::new(Position::StartPosition),
             white_player: Box::new(HumanPlayer::new()),
@@ -72,7 +78,7 @@ impl GameState {
 
     /// Calculates and makes a move if it is a computer player's turn to move
     pub fn make_computer_move(&mut self) {
-        console_log!("lib::GameState::make_computer_move: todo!");
+        console_log!("lib::GameState::make_computer_move:");
         let chess_move : ChessMove;
         if self.board.white_to_move() {
             chess_move = self.white_player.make_move(&self.board);

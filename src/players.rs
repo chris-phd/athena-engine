@@ -49,8 +49,9 @@ impl Player for HumanPlayer {
 
 impl Player for ComputerPlayer {
     fn make_move(&self, board: &Board) -> ChessMove {
-        console_log!("players::ComputerPlayer::make_move: todo! ");
-        return engine::best_move(board);
+        console_log!("players::ComputerPlayer::make_move: ");
+        return engine::random_move(&board);
+        // return engine::best_move(&board);
     }
 
     fn is_computer(&self) -> bool {
