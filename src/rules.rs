@@ -41,6 +41,8 @@ pub fn all_possible_moves(board: &Board, rank_file: [usize; 2]) -> Vec<ChessMove
     let is_white = piece.is_uppercase();
     let piece_type = piece.to_ascii_uppercase();
 
+    console_log!("    piece_type = {}", piece_type);
+
     let moves: Vec<ChessMove>;
     match piece_type {
         'Q' => moves = pieces::queen_moves(&board, rank_file, is_white),

@@ -24,20 +24,28 @@ pub fn best_move(_board: &Board) -> ChessMove {
 pub fn random_move(board: &Board) -> ChessMove {
     console_log!("engine::random_move: ");
 
-    let square_rank_file = get_random_piece_to_move(&board);
-    console_log!(" random piece = {:?}", square_rank_file);
-    let possible_moves = all_possible_moves(&board, square_rank_file);
-    let num_possible_moves = possible_moves.len();
-    console_log!(" num possible moves = {}", num_possible_moves);
+    let mut possible_moves : Vec<ChessMove> = vec![];
 
-    let chess_move : ChessMove;
-    if num_possible_moves > 0 {
-        let rand_inx = get_random_usize(num_possible_moves); 
-        chess_move = possible_moves[rand_inx];
-    } else {
-        console_log!("No possible moves from randomly selected piece.");
-        chess_move = ChessMove::new_empty_move();
+    let mut timeout_counter = 0;
+    let mut num_possible_moves = 0;
+    while num_possible_moves == 0 && timeout_counter < 100 {
+        let square_rank_file = get_random_piece_to_move(&board);
+        possible_moves = all_possible_moves(&board, square_rank_file);
+        num_possible_moves = possible_moves.len();
+        console_log!("    num possible moves = {}, for piece on square {:?}", 
+                     num_possible_moves, square_rank_file);
+
+        timeout_counter = timeout_counter + 1;
     }
+
+    if num_possible_moves == 0 {
+        panic!();
+    }
+
+    let rand_inx = get_random_usize(num_possible_moves); 
+    let chess_move = possible_moves[rand_inx];
+
+    console_log!("    selected move, src = {:?}, dest = {:?}", chess_move.src(), chess_move.dest());
 
     return chess_move;
 }
