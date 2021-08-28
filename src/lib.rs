@@ -47,12 +47,12 @@ impl GameState {
     /// Called by js front end to update the board visible to the 
     /// human user after the engine makes a move / updates the board
     pub fn get_board(&mut self) -> Vec<u8> {
-        console_log!("GameState::get_board: todo!");
+        console_log!("GameState::get_board:");
         return self.board.get_current_position();
     }
 
     pub fn set_board(&mut self, fen_string: &str) {
-        console_log!("GameState::set_board: todo!");
+        console_log!("GameState::set_board:");
         self.board.set_board_from_fen_string(fen_string);
     }
 

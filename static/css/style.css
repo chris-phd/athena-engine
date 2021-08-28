@@ -1,23 +1,19 @@
 
 /* Page layout and chess board squares */
-.rank {
-    display:flex;
-}
-
 main {
     display: flex;
 }
 
-.section {
-    display: flex;
+.margin {
+    flex: 1;
 }
 
-.content  {
-    flex: 2;
+.centre {
+    flex: 1;
 }
 
-.board {
-    flex: 5;
+.rank {
+    display:flex;
 }
 
 .light {

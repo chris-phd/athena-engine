@@ -3,45 +3,47 @@
 <head>
     <meta charset="utf-8">
 
-    <title>Athena Engine</title>
+    <title>Athena Chess Engine</title>
 
     <link href="css/style.css" rel="stylesheet"> 
 </head>
 <body>
 
-    <div id="header" class="section">
-        <div class="content"> <h1>The Athena Chess Engine</h1> </div>
+    <div id="header">
+        <h1 style="margin-left: 80px">The Athena Chess Engine</h1>
     </div>
     <main>
-        <div id="config" class="content">
-            White: 
-            <select id="white-player-type" class="dropdown">
-                <option>Human</option>
-                <option>Computer</option>
-            </select> <br> <br>
-            Black:
-            <select id="black-player-type" class="dropdown">
-                <option>Human</option>
-                <option>Computer</option>
-            </select> <br> <br>
-            Position:
-            <select id="chess-position" class="dropdown">
-                <option>Standard</option>
-                <option>Test Queen</option>
-            </select> <br> <br>
-            <button id="reset-board-button">Reset board</button>
+        <div class="margin"></div>
+        <div class="centre">
+
+            <div id="chess-board"></div>
+
+            <div id="config">
+                <h2>Game Settings</h2>
+                White: 
+                <select id="white-player-type" class="dropdown">
+                    <option>Human</option>
+                    <!-- <option>Computer</option> -->
+                </select> <br>
+                Black:
+                <select id="black-player-type" class="dropdown">
+                    <!-- <option>Human</option> -->
+                    <option>Computer</option>
+                </select> <br>
+                Start Position:
+                <select id="chess-position" class="dropdown">
+                    <option>Standard</option>
+                    <option>Test Queen</option>
+                </select> <br>
+                <button id="reset-board-button">Reset game</button>
+            </div>
+
         </div>
-        <div id="chess-board" class="board"></div>
-        <div id="game-info" class="content">
-            <p>Timer</p>
-            <p>Move history</p>
-        </div>
+        <div class="margin"></div>
     </main>
-    <div id="footer" class="section">
-        <div class="content">
-            <p>Author: <a href="https://www.cooper.info/">Chris Cooper</a> </p>
-            <p>Source: <a href="https://github.com/C-J-Cooper/athena-engine">Github</a> </p>
-        </div>
+    <div id="footer">
+        <p style="margin-left: 80px">Author: <a href="https://www.cooper.info/">Chris Cooper</a> </p>
+        <p style="margin-left: 80px">Source: <a href="https://github.com/C-J-Cooper/athena-engine">Github</a> </p>
     </div>
 
     <script src="index.js"></script>
