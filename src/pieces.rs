@@ -201,13 +201,6 @@ pub fn rook_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMo
     return slide_moves(movements, &board, src, is_white);
 }
 
-/// Returns all possible queen moves from a given square
-pub fn queen_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMove> {
-    console_log!("pieces::queen_moves:");
-    let mut all_possible_moves = rook_moves(&board, src, is_white);
-    all_possible_moves.append(&mut bishop_moves(&board, src, is_white));
-    return all_possible_moves;
-}
 
 /// Generates all possible moves from a square by sliding in the given directions.
 /// Used to generate the bishop and rook moves
@@ -231,6 +224,53 @@ fn slide_moves(movements: Vec<DeltaRankFile>, board: &Board, src: [usize; 2], is
     }
 
     return all_possible_moves;
+}
+
+
+/// Returns all possible queen moves from a given square
+pub fn queen_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMove> {
+    console_log!("pieces::queen_moves:");
+    let mut all_possible_moves = rook_moves(&board, src, is_white);
+    all_possible_moves.append(&mut bishop_moves(&board, src, is_white));
+    return all_possible_moves;
+}
+
+/// Returns all possible queen moves from a given square
+pub fn king_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMove> {
+    console_log!("pieces::king_moves: todo");
+    let mut all_possible_moves = king_standard_moves(board, src, is_white);
+    all_possible_moves.append(&mut king_castle_moves(board, src, is_white));
+
+    return all_possible_moves;
+}
+
+/// Returns legal standard king moves from the current position
+pub fn king_standard_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMove> {
+    console_log!("pieces::king_standard_moves: todo ");
+    let mut standard_moves : Vec<ChessMove> = vec![];
+    let movements = vec![
+        DeltaRankFile { delta_rank: -1, delta_file:  0, },
+        DeltaRankFile { delta_rank: -1, delta_file:  1, },
+        DeltaRankFile { delta_rank:  0, delta_file:  1, },
+        DeltaRankFile { delta_rank:  1, delta_file:  1, },
+        DeltaRankFile { delta_rank:  1, delta_file:  0, },
+        DeltaRankFile { delta_rank:  1, delta_file: -1, },
+        DeltaRankFile { delta_rank:  0, delta_file: -1, },
+        DeltaRankFile { delta_rank: -1, delta_file: -1, },
+    ];
+
+    for movement in movements {
+        // Standard moves
+    }
+
+    return standard_moves;
+}
+
+/// Returns legal castle moves from the current position
+pub fn king_castle_moves(_board: &Board, _src: [usize; 2], _is_white: bool) -> Vec<ChessMove> {
+    console_log!("pieces::king_castle_moves: todo ");
+    let possible_castle_moves : Vec<ChessMove> = vec![];
+    return possible_castle_moves;
 }
 
 /// Checks if a square is occupied by a piece of a different colour, and if it is 
