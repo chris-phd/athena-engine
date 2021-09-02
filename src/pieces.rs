@@ -11,9 +11,9 @@ pub struct DeltaRankFile {
 
 impl DeltaRankFile {
     /// Returns an invalid square [0, 0] if destination square is off the board
-    pub fn dest_from_src(&self, src_rank_file: [usize; 2]) -> [usize; 2] {
-        let dest = [(src_rank_file[0] as i32 + self.delta_rank),
-                   (src_rank_file[1] as i32 + self.delta_file)];
+    pub fn dest_from_src(&self, src: [usize; 2]) -> [usize; 2] {
+        let dest = [(src[0] as i32 + self.delta_rank),
+                   (src[1] as i32 + self.delta_file)];
         if dest[0] > 8 || dest[0] < 1 || dest[1] > 8 || dest[1] < 1 {
             return [0, 0];
         }
@@ -22,12 +22,20 @@ impl DeltaRankFile {
     }
 }
 
+#[derive(Clone, Copy)]
+pub enum MoveType {
+    Standard,
+    CastleKingSide,
+    CastleQueenSide,
+}
+
 /// ChessMove, represents a move made by a player
 #[derive(Clone, Copy)]
 pub struct ChessMove {
-    src_rank_file: [usize; 2],
-    dest_rank_file: [usize; 2],
-    piece: char,
+    pub src: [usize; 2],
+    pub dest: [usize; 2],
+    pub piece: char,
+    pub move_type: MoveType,
 }
 
 impl ChessMove {
@@ -39,36 +47,36 @@ impl ChessMove {
 
     pub fn new_empty_move() -> ChessMove {
         return ChessMove {
-            src_rank_file: [0, 0],
-            dest_rank_file: [0, 0],
+            src: [0, 0],
+            dest: [0, 0],
             piece: '-',
+            move_type: MoveType::Standard,
         }
     }
 
-    pub fn set_move(&mut self, board: &Board, src_rank_file: [usize; 2], 
-        dest_rank_file: [usize; 2]) {
-        console_log!("pieces::ChessMove::set_move: todo!");
+    pub fn set_move(&mut self, board: &Board, src: [usize; 2], 
+        dest: [usize; 2]) {
         
-        self.src_rank_file = src_rank_file;
-        self.dest_rank_file = dest_rank_file;
-        self.piece = board.get_piece_on_square(src_rank_file);
+        self.src = src;
+        self.dest = dest;
+        self.piece = board.get_piece_on_square(src);
 
         // TODO, check the current board position to see if this move
         // is a special move. en_passant / castle move / promotion.
-    }
-
-    pub fn src(&self) -> [usize; 2] {
-        return self.src_rank_file;
-    }
-
-    pub fn dest(&self) -> [usize; 2] {
-        return self.dest_rank_file;
+        if (self.piece == 'k' || self.piece == 'K') && src[1] == 5 {
+            if dest[1] == 7 {
+                self.move_type = MoveType::CastleKingSide;
+            } else if dest[1] == 3 {
+                console_log!("set_move: CastleQueenSide");
+                self.move_type = MoveType::CastleQueenSide;
+            }
+        }
     }
 
     pub fn is_the_same_as(&self, that: &ChessMove) -> bool {
 
-        let is_same_squares = self.src_rank_file == that.src_rank_file && 
-                            self.dest_rank_file == that.dest_rank_file;
+        let is_same_squares = self.src == that.src && 
+                            self.dest == that.dest;
         let is_same_piece = self.piece == that.piece;
         return is_same_piece && is_same_squares;
     }
@@ -84,7 +92,7 @@ pub fn pawn_moves(board: &Board, rank_file: [usize; 2], is_white: bool) -> Vec<C
 
 /// Returns all possible pawn captures from a given square
 fn pawn_capture_moves(board: &Board, rank_file: [usize; 2], is_white: bool) -> Vec<ChessMove> {
-
+    console_log!("pieces::pawn_capture_moves: implement en passant capture.");
     let mut non_capture_moves : Vec<ChessMove> = vec![];
 
     let capture_movements;
@@ -138,7 +146,7 @@ fn pawn_non_capture_moves(board: &Board, src_rank_file: [usize; 2], is_white: bo
            board.is_occupied(dest_rank_file) {
             continue;
         }
-        if is_slide_clear_for_non_capture(&board, src_rank_file, dest_rank_file) {
+        if is_slide_clear_for_non_capture(&board, src_rank_file, dest_rank_file, is_white, false) {
             let possible_move = ChessMove::new(&board, src_rank_file, dest_rank_file);
             non_capture_moves.push(possible_move);
         }
@@ -215,7 +223,7 @@ fn slide_moves(movements: Vec<DeltaRankFile>, board: &Board, src: [usize; 2], is
             let possible_move = ChessMove::new(&board, src, dest);
             all_possible_moves.push(possible_move);
             
-            if (is_capture(&board, dest, is_white)) {
+            if is_capture(&board, dest, is_white) {
                 break;
             }
 
@@ -238,15 +246,16 @@ pub fn queen_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessM
 /// Returns all possible queen moves from a given square
 pub fn king_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMove> {
     console_log!("pieces::king_moves: todo");
-    let mut all_possible_moves = king_standard_moves(board, src, is_white);
+    let move_into_check_allowed = false;
+    let mut all_possible_moves = king_standard_moves(board, src, is_white, move_into_check_allowed);
     all_possible_moves.append(&mut king_castle_moves(board, src, is_white));
 
     return all_possible_moves;
 }
 
 /// Returns legal standard king moves from the current position
-pub fn king_standard_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMove> {
-    console_log!("pieces::king_standard_moves: todo ");
+pub fn king_standard_moves(board: &Board, src: [usize; 2], is_white: bool, move_into_check_allowed: bool) -> Vec<ChessMove> {
+    console_log!("pieces::king_standard_moves:");
     let mut standard_moves : Vec<ChessMove> = vec![];
     let movements = vec![
         DeltaRankFile { delta_rank: -1, delta_file:  0, },
@@ -260,17 +269,69 @@ pub fn king_standard_moves(board: &Board, src: [usize; 2], is_white: bool) -> Ve
     ];
 
     for movement in movements {
-        // Standard moves
+        let dest = movement.dest_from_src(src);
+        if !board.is_valid_rank_file(dest) {
+            continue;
+        }
+
+        if !move_into_check_allowed && is_square_attacked(&board, dest, !is_white) {
+            // King should not move into check
+            continue;
+        }
+        
+        if !board.is_occupied(dest) || is_capture_including_king_capture(&board, dest, is_white) {
+            let possible_move = ChessMove::new(&board, src, dest);
+            standard_moves.push(possible_move);
+        }
     }
 
     return standard_moves;
 }
 
 /// Returns legal castle moves from the current position
-pub fn king_castle_moves(_board: &Board, _src: [usize; 2], _is_white: bool) -> Vec<ChessMove> {
+pub fn king_castle_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMove> {
     console_log!("pieces::king_castle_moves: todo ");
-    let possible_castle_moves : Vec<ChessMove> = vec![];
+    let mut possible_castle_moves : Vec<ChessMove> = vec![];
+
+    // Check if the king 
+    if board.is_castle_king_side_avaliable(is_white) { 
+        let dest: [usize; 2];
+        if is_white {
+            dest = [1, 7];
+        } else {
+            dest = [8, 7];
+        }
+        
+        let is_king = true;
+        if is_slide_clear_for_non_capture(&board, src, dest, is_white, is_king) {
+            let castle_move = ChessMove::new(&board, src, dest);
+            possible_castle_moves.push(castle_move);
+        }
+
+    }
+    
+    if board.is_castle_queen_side_avaliable(is_white) {
+        let dest: [usize; 2];
+        if is_white {
+            dest = [1, 3];
+        } else {
+            dest = [8, 3];
+        }
+
+        let is_king = true;
+        if is_slide_clear_for_non_capture(&board, src, dest, is_white, is_king) {
+            let castle_move = ChessMove::new(&board, src, dest);
+            possible_castle_moves.push(castle_move);
+        }
+    }
     return possible_castle_moves;
+}
+
+/// Returns all possible king standard moves without checking if the king moves into check.
+/// Used to ensure the kings will never be next to each other
+fn king_moves_move_into_check_allowed(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMove> {
+    let move_into_check_allowed = true;
+    return king_standard_moves(&board, src, is_white, move_into_check_allowed);
 }
 
 /// Checks if a square is occupied by a piece of a different colour, and if it is 
@@ -281,10 +342,17 @@ fn is_capture(board : &Board, dest_rank_file: [usize; 2], is_white: bool) -> boo
            !board.is_occupied_by_king(dest_rank_file);
 }
 
+/// Performs the same checks as is_capture, but allows the king to be captured. Used to
+/// check which squares are under attack in the is_square_attacked function
+fn is_capture_including_king_capture(board : &Board, dest_rank_file: [usize; 2], is_white: bool) -> bool {
+    return ( is_white && board.is_occupied_by_black(dest_rank_file)) ||
+           (!is_white && board.is_occupied_by_white(dest_rank_file)); 
+}
 
 /// Checks if a slide move is clear of other pieces. Slide moves
-/// handle movements for rooks, bishops, queens. 
-fn is_slide_clear_for_non_capture(board: &Board, src: [usize; 2], dest: [usize; 2]) -> bool {
+/// handle movements for rooks, bishops, queens and king castles
+fn is_slide_clear_for_non_capture(board: &Board, src: [usize; 2], dest: [usize; 2], 
+    is_white: bool, is_king: bool) -> bool {
     let rank_dir = (dest[0] as i32 - src[0] as i32).signum();
     let file_dir = (dest[1] as i32 - src[1] as i32).signum();
     let mut traversed = [(src[0] as i32 + rank_dir) as usize,
@@ -293,6 +361,11 @@ fn is_slide_clear_for_non_capture(board: &Board, src: [usize; 2], dest: [usize; 
     while traversed[0] != dest[0] || traversed[1] != dest[1] {
 
         if board.is_occupied(traversed) {
+            return false;
+        }
+
+        // The king cannot enter check
+        if is_king && is_square_attacked(&board, traversed, !is_white) {
             return false;
         }
 
@@ -311,7 +384,7 @@ fn is_slide_clear_for_non_capture(board: &Board, src: [usize; 2], dest: [usize; 
 
 /// Checks that the slide move is clear without checking the
 /// destination square. 
-fn is_slide_clear_for_capture(board: &Board, src: [usize; 2], dest: [usize; 2]) -> bool {
+fn is_slide_clear_for_capture(board: &Board, src: [usize; 2], dest: [usize; 2], is_white: bool) -> bool {
     if src[0] == dest[0] && src[1] == dest[1] {
         return true;
     }
@@ -321,13 +394,45 @@ fn is_slide_clear_for_capture(board: &Board, src: [usize; 2], dest: [usize; 2]) 
     let new_dest = [(dest[0] as i32 - rank_dir) as usize,
                               (dest[1] as i32 - file_dir) as usize];
 
-    return is_slide_clear_for_non_capture(&board, src, new_dest);
+    return is_slide_clear_for_non_capture(&board, src, new_dest, is_white, false);
+}
+
+/// Returns true if a square is attacked by a piece of a specified colour.
+pub fn is_square_attacked(board : &Board, rank_file : [usize; 2], is_attacked_by_white : bool) -> bool {
+    eprintln!("[chess_move::is_square_attacked]: ");
+
+    // Order of the pieces in the move_functions vector must match the order
+    // in the piece types vector
+    let move_functions : Vec<&dyn Fn(&Board, [usize; 2], bool) -> Vec<ChessMove>> = 
+        vec![&queen_moves, &bishop_moves, &knight_moves, &rook_moves, &pawn_capture_moves, 
+        &king_moves_move_into_check_allowed];
+    let piece_types = vec!['Q', 'B', 'N', 'R', 'P', 'K'];
+
+    for i in 0..piece_types.len() {
+
+        let is_white = !is_attacked_by_white;
+        let piece_moves = move_functions[i](&board, rank_file, is_white);
+        for piece_move in piece_moves {
+            let attacking_square = piece_move.dest;
+
+            if !board.is_occupied(attacking_square) {
+                continue;
+            }
+
+            let piece_on_attacking_square = board.get_piece_on_square(attacking_square);
+            let piece_type = piece_on_attacking_square.to_ascii_uppercase();
+            if piece_type == piece_types[i] {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 #[cfg(test)]
 mod tests {
     use crate::console_log;
-    use crate::pieces::ChessMove;
     use crate::board::{Board, Position};
     use crate::pieces::{self};
 
@@ -337,10 +442,10 @@ mod tests {
         let board = Board::new(Position::TestQueen);
         let src = [5 as usize, 4 as usize];
         let mut dest = [8 as usize, 4 as usize];
-        assert!( !pieces::is_slide_clear_for_non_capture(&board, src, dest) );
+        assert!( !pieces::is_slide_clear_for_non_capture(&board, src, dest, false, false) );
 
         dest = [5 as usize, 6 as usize];
-        assert!( pieces::is_slide_clear_for_capture(&board, src, dest) );
+        assert!( pieces::is_slide_clear_for_capture(&board, src, dest, false) );
     }
 
 
@@ -399,5 +504,35 @@ mod tests {
         src = [1 as usize, 8 as usize];
         is_white = true;
         assert_eq!( pieces::rook_moves(&board, src, is_white).len(), 2);
+    }
+
+    #[test]
+    fn is_square_attacked() {
+        let mut board = Board::new(Position::TestQueen);
+        let mut attacked_square = [3 as usize, 2 as usize];
+        let mut is_attacked_by_white = false;
+        assert!( pieces::is_square_attacked(&board, attacked_square, is_attacked_by_white) );
+        is_attacked_by_white = true;
+        assert!( !pieces::is_square_attacked(&board, attacked_square, is_attacked_by_white) );
+
+        attacked_square = [8 as usize, 8 as usize];
+        is_attacked_by_white = true;
+        assert!( !pieces::is_square_attacked(&board, attacked_square, is_attacked_by_white) );
+
+
+        board = Board::new(Position::TestPawn);
+        attacked_square = [6 as usize, 6 as usize];
+        is_attacked_by_white = true;
+        assert!( pieces::is_square_attacked(&board, attacked_square, is_attacked_by_white) );
+        is_attacked_by_white = false;
+        assert!( pieces::is_square_attacked(&board, attacked_square, is_attacked_by_white) );
+    }
+
+    #[test]
+    fn possible_king_moves() {
+        let board = Board::new(Position::TestKing);
+        let src = [1 as usize, 5 as usize];
+        let is_white = true;
+        assert_eq!( pieces::king_moves(&board, src, is_white).len(), 3);
     }
 }

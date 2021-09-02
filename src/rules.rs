@@ -7,7 +7,7 @@ use crate::board::Board;
 pub fn is_move_legal(board: &Board, requested_move: &ChessMove) -> bool {
     console_log!("rules::is_move_legal: ");
     
-    let possible_moves = all_possible_moves(board, requested_move.src());
+    let possible_moves = all_possible_moves(board, requested_move.src);
 
     let mut is_legal = false;
     for possible_move in possible_moves {
@@ -45,6 +45,7 @@ pub fn all_possible_moves(board: &Board, rank_file: [usize; 2]) -> Vec<ChessMove
 
     let moves: Vec<ChessMove>;
     match piece_type {
+        'K' => moves = pieces::king_moves(&board, rank_file, is_white),
         'Q' => moves = pieces::queen_moves(&board, rank_file, is_white),
         'R' => moves = pieces::rook_moves(&board, rank_file, is_white),
         'B' => moves = pieces::bishop_moves(&board, rank_file, is_white),

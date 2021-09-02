@@ -45,7 +45,7 @@ pub fn random_move(board: &Board) -> ChessMove {
     let rand_inx = get_random_usize(num_possible_moves); 
     let chess_move = possible_moves[rand_inx];
 
-    console_log!("    selected move, src = {:?}, dest = {:?}", chess_move.src(), chess_move.dest());
+    console_log!("    selected move, src = {:?}, dest = {:?}", chess_move.src, chess_move.dest);
 
     return chess_move;
 }

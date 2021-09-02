@@ -1,6 +1,6 @@
 use crate::console_log;
 use crate::utils::log;
-use crate::pieces::ChessMove;
+use crate::pieces::{ChessMove, MoveType};
 
 /// The Chess Board. Stores the position of the chess pieces.
 pub struct Board {
@@ -68,6 +68,16 @@ impl Board {
         }
     }
 
+    pub fn is_castle_king_side_avaliable(&self, is_white: bool) -> bool {
+        return (is_white && self.castle_king_side_white_avaliable) ||
+                (!is_white && self.castle_king_side_black_avaliable);
+    }
+
+    pub fn is_castle_queen_side_avaliable(&self, is_white: bool) -> bool {
+        return (is_white && self.castle_queen_side_white_avaliable) ||
+                (!is_white && self.castle_queen_side_black_avaliable);
+    }
+
     /// Returns the current board position as an array of ints. 
     /// 0 = empty squares, odd num = black, even num = white
     /// 1, 2 = pawn. 3, 4 = knight. 5, 6 = bishop, 7, 8 = rook, 
@@ -98,12 +108,23 @@ impl Board {
     pub fn make_move(&mut self, chess_move: ChessMove) {
         console_log!("board::Board::make_move: Finish implementing me!");
 
-        let dest_index = self.square_index(chess_move.dest());
-        let src_index = self.square_index(chess_move.src());
-        self.squares[dest_index] = self.squares[src_index];
-        self.squares[src_index] = '-';
-        // todo! create the cases for the special moves (promotions, 
-        // castles, en passant etc.)
+        self.move_piece(chess_move.src, chess_move.dest);
+
+        match chess_move.move_type {
+            MoveType::Standard => { } , 
+            MoveType::CastleKingSide =>  {
+                let rook_src  : [usize; 2] = [chess_move.src[0], 8];
+                let rook_dest : [usize; 2] = [rook_src[0], 6];
+                assert_eq!(self.get_piece_on_square(rook_src).to_ascii_uppercase(), 'R');
+                self.move_piece(rook_src, rook_dest);
+            },
+            MoveType::CastleQueenSide => {
+                let rook_src  : [usize; 2] = [chess_move.src[0], 1];
+                let rook_dest : [usize; 2] = [rook_src[0], 4];   
+                assert_eq!(self.get_piece_on_square(rook_src).to_ascii_uppercase(), 'R');
+                self.move_piece(rook_src, rook_dest);
+            },
+        }
 
         self.is_white_to_move = !self.is_white_to_move;
     }
@@ -152,6 +173,14 @@ impl Board {
 
     pub fn is_valid_rank_file(&self, rank_file: [usize; 2]) -> bool {
         return !(rank_file[0] > 8 || rank_file[0] < 1 || rank_file[1] > 8 || rank_file[1] < 1);
+    }
+
+    /// Moves the piece from src to dest, and leaves the src square empty
+    fn move_piece(&mut self, src: [usize ; 2], dest: [usize; 2]) {
+        let dest_index = self.square_index(dest);
+        let src_index = self.square_index(src);
+        self.squares[dest_index] = self.squares[src_index];
+        self.squares[src_index] = '-';
     }
 
     /// Sets the piece at the square. By convention, uppercase is white,
