@@ -9,7 +9,7 @@ mod players;
 mod utils;
 mod rules;
 
-use board::{Board, Position};
+use board::Board;
 use players::{Player, HumanPlayer, ComputerPlayer};
 use utils::log;
 use pieces::ChessMove;
@@ -38,7 +38,7 @@ impl GameState {
         console_error_panic_hook::set_once();
 
         return GameState {
-            board: Board::new(Position::StartPosition),
+            board: Board::new(),
             white_player: Box::new(HumanPlayer::new()),
             black_player: Box::new(ComputerPlayer::new()),
         };

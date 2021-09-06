@@ -80,6 +80,10 @@ impl ChessMove {
         let is_same_piece = self.piece == that.piece;
         return is_same_piece && is_same_squares;
     }
+
+    pub fn is_white_piece(&self) -> bool {
+        return self.piece.is_uppercase();
+    }
 }
 
 /// Returns all possible pawn moves from a given square
@@ -293,6 +297,11 @@ pub fn king_castle_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<
     console_log!("pieces::king_castle_moves: todo ");
     let mut possible_castle_moves : Vec<ChessMove> = vec![];
 
+    if is_square_attacked(&board, src, !is_white) {
+        // no castle moves avaliable when king is in check
+        return possible_castle_moves;        
+    }
+
     // Check if the king 
     if board.is_castle_king_side_avaliable(is_white) { 
         let dest: [usize; 2];
@@ -433,13 +442,17 @@ pub fn is_square_attacked(board : &Board, rank_file : [usize; 2], is_attacked_by
 #[cfg(test)]
 mod tests {
     use crate::console_log;
-    use crate::board::{Board, Position};
+    use crate::board::Board;
     use crate::pieces::{self};
 
     #[test]
     fn is_slide_clear() {
 
-        let board = Board::new(Position::TestQueen);
+        console_log!("top of is slide clear");
+        let mut board = Board::new();
+        console_log!("created board");
+        board.set_board_from_fen_string("8/3r4/8/3q1P2/8/8/6np/5k1Q ");
+        console_log!("set board");
         let src = [5 as usize, 4 as usize];
         let mut dest = [8 as usize, 4 as usize];
         assert!( !pieces::is_slide_clear_for_non_capture(&board, src, dest, false, false) );
@@ -448,10 +461,10 @@ mod tests {
         assert!( pieces::is_slide_clear_for_capture(&board, src, dest, false) );
     }
 
-
     #[test]
     fn possible_pawn_moves() {
-        let board = Board::new(Position::TestPawn);
+        let mut board = Board::new();
+        board.set_board_from_fen_string("8/4p2p/4K3/8/2n5/1P6/6P1/8 ");
         let mut src = [5 as usize, 4 as usize];
         let mut is_white = true;
         assert_eq!( pieces::pawn_moves(&board, src, is_white).len(), 2);
@@ -472,7 +485,8 @@ mod tests {
 
     #[test]
     fn possible_knight_moves() {
-        let board = Board::new(Position::TestKnight);
+        let mut board = Board::new();
+        board.set_board_from_fen_string("8/8/8/8/2N5/P7/1P1r2pp/7n");
         let mut src = [4 as usize, 3 as usize];
         let mut is_white = true;
         assert_eq!( pieces::knight_moves(&board, src, is_white).len(), 6);
@@ -484,7 +498,8 @@ mod tests {
 
     #[test]
     fn possible_queen_moves() {
-        let board = Board::new(Position::TestQueen);
+        let mut board = Board::new();
+        board.set_board_from_fen_string("8/3r4/8/3q1P2/8/8/6np/5k1Q");
         let mut src = [5 as usize, 4 as usize];
         let mut is_white = false;
         assert_eq!( pieces::queen_moves(&board, src, is_white).len(), 1+3+2+2+4+3+3+3);
@@ -496,7 +511,8 @@ mod tests {
 
     #[test]
     fn possible_rook_moves() {
-        let board = Board::new(Position::TestRook);
+        let mut board = Board::new();
+        board.set_board_from_fen_string("8/3p4/8/3r1P2/8/8/6np/5Q1R");
         let mut src = [5 as usize, 4 as usize];
         let mut is_white = false;
         assert_eq!( pieces::rook_moves(&board, src, is_white).len(), 1+2+3+4);
@@ -508,7 +524,8 @@ mod tests {
 
     #[test]
     fn is_square_attacked() {
-        let mut board = Board::new(Position::TestQueen);
+        let mut board = Board::new();
+        board.set_board_from_fen_string("8/3r4/8/3q1P2/8/8/6np/5k1Q");
         let mut attacked_square = [3 as usize, 2 as usize];
         let mut is_attacked_by_white = false;
         assert!( pieces::is_square_attacked(&board, attacked_square, is_attacked_by_white) );
@@ -520,7 +537,7 @@ mod tests {
         assert!( !pieces::is_square_attacked(&board, attacked_square, is_attacked_by_white) );
 
 
-        board = Board::new(Position::TestPawn);
+        board.set_board_from_fen_string("8/4p2p/4K3/8/2n5/1P6/6P1/8");
         attacked_square = [6 as usize, 6 as usize];
         is_attacked_by_white = true;
         assert!( pieces::is_square_attacked(&board, attacked_square, is_attacked_by_white) );
@@ -530,7 +547,8 @@ mod tests {
 
     #[test]
     fn possible_king_moves() {
-        let board = Board::new(Position::TestKing);
+        let mut board = Board::new();
+        board.set_board_from_fen_string("8/8/8/8/8/8/3r1PPP/R3K2R");
         let src = [1 as usize, 5 as usize];
         let is_white = true;
         assert_eq!( pieces::king_moves(&board, src, is_white).len(), 3);

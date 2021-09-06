@@ -62,14 +62,15 @@ pub fn all_possible_moves(board: &Board, rank_file: [usize; 2]) -> Vec<ChessMove
 #[cfg(test)]
 mod tests {
     use crate::pieces::ChessMove;
-    use crate::board::{Board, Position};
+    use crate::board::Board;
     use crate::rules::is_move_legal;
 
 
     #[test]
     fn king_legal_capture() {
 
-        let board = Board::new(Position::TestKing);
+        let mut board = Board::new();
+        board.set_board_from_fen_string("8/8/8/8/8/8/3r1PPP/R3K2R");
         board.render();
         let mut requested_move = ChessMove::new_empty_move();
 

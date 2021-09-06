@@ -14,19 +14,11 @@ pub struct Board {
 }
 
 impl Board {
-    pub fn new(position: Position) -> Board {
+    pub fn new() -> Board {
         console_log!("board::Board::new: ");
-        let set_squares: [char; 64];
-        match position {
-            Position::StartPosition => set_squares = start_position(),
-            Position::TestQueen => set_squares = test_queen(),
-            Position::TestKing => set_squares = test_king(),
-            Position::TestRook => set_squares = test_rook(),
-            Position::TestKnight => set_squares = test_knight(),
-            Position::TestPawn => set_squares = test_pawn(),
-        }
+        let set_squares: [char; 64] = ['-'; 64];
 
-        return Board {
+        let mut board = Board {
             squares: set_squares,
             is_white_to_move: true,
             en_passant_sq: [0, 0],
@@ -35,12 +27,15 @@ impl Board {
             castle_queen_side_white_avaliable: true,
             castle_queen_side_black_avaliable: true,
         };
+
+        board.set_board_from_fen_string("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
+        return board;
     }
 
     /// Sets the squares from a fen string
     /// See https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
     pub fn set_board_from_fen_string(&mut self, fen_string: &str) {
-        self.clear_board();
+        self.squares = ['-'; 64];
 
         let mut rank = 8 as usize;
         let mut file = 1 as usize;
@@ -49,21 +44,20 @@ impl Board {
 
             if !finished_piece_positions {
                 if ch.is_ascii_digit() {
-
-                } else if ch.is_ascii_alphabetic() {
-                    rank -= 1 as usize;
-                    file = 1 as usize;
-                } else if ch == '/' {
+                    file += ch as usize - '0' as usize;
+                } if ch.is_ascii_alphabetic() {
                     let piece = ch;
                     self.set_piece(piece, [rank, file]);
                     file += 1 as usize;
+                } else if ch == '/' {
+                    rank -= 1 as usize;
+                    file = 1 as usize;
                 } else if ch == ' ' {
-                    // Piece positions have been set, now deal with 
+                    // Piece positions have been set. 
+                    // TODO! Add section to deal with 
                     // who is to move and castle avaliability
                     finished_piece_positions = true;
                 }
-            } else {
-                // handle the white to move, castle avaliable characters
             }
         }
     }
@@ -107,22 +101,38 @@ impl Board {
 
     pub fn make_move(&mut self, chess_move: ChessMove) {
         console_log!("board::Board::make_move: Finish implementing me!");
-
+        console_log!("    is_white_to_move = {}", self.is_white_to_move);
+        console_log!("   castel king side white avaliable = {}", self.castle_king_side_white_avaliable);
+        if (self.is_white_to_move && !chess_move.piece.is_uppercase()) ||
+           (!self.is_white_to_move && chess_move.piece.is_uppercase()) {
+            return;
+        }
+        
         self.move_piece(chess_move.src, chess_move.dest);
 
         match chess_move.move_type {
-            MoveType::Standard => { } , 
+            MoveType::Standard => { } , // TODO! check if an enpassant square becomes avaliable or if the king loses caste lrights 
             MoveType::CastleKingSide =>  {
                 let rook_src  : [usize; 2] = [chess_move.src[0], 8];
                 let rook_dest : [usize; 2] = [rook_src[0], 6];
                 assert_eq!(self.get_piece_on_square(rook_src).to_ascii_uppercase(), 'R');
                 self.move_piece(rook_src, rook_dest);
+                if chess_move.is_white_piece() {
+                    self.castle_king_side_white_avaliable = false;
+                } else {
+                    self.castle_king_side_black_avaliable = false;
+                }
             },
             MoveType::CastleQueenSide => {
                 let rook_src  : [usize; 2] = [chess_move.src[0], 1];
                 let rook_dest : [usize; 2] = [rook_src[0], 4];   
                 assert_eq!(self.get_piece_on_square(rook_src).to_ascii_uppercase(), 'R');
                 self.move_piece(rook_src, rook_dest);
+                if chess_move.is_white_piece() {
+                    self.castle_queen_side_white_avaliable = false;
+                } else {
+                    self.castle_queen_side_black_avaliable = false;
+                }
             },
         }
 
@@ -134,10 +144,15 @@ impl Board {
         return self.squares[self.square_index(rank_file)];
     }
 
-    /// IMPLEMENT ME! This will be important when validating that the 
-    /// front end matches the back end...
+    /// Render the board to the console. Only used when running the tests.
     pub fn render(&self) {
         console_log!("board::Board::render: todo!");
+        for rank in (1..=8).rev() {
+            for file in 1..=8 {
+                eprint!(" {} ", self.get_piece_on_square([rank, file]));
+            }
+            eprintln!("");
+        }
     }
 
     pub fn white_to_move(&self) -> bool {
@@ -206,7 +221,6 @@ impl Board {
     fn square_index(&self, rank_file : [usize; 2]) -> usize {
         return (8 - 1 - (rank_file[0]-1))*8 + (rank_file[1]-1);
     }
-
 }
 
 /// Chess board position pre-sets
@@ -215,19 +229,8 @@ impl Board {
 /// to pass the state of the board back and forth between
 /// the js front end and rust backend.
 
-/// Then work on passing human moves back and forth between
-/// the front end and get the board to update... Do this after
-/// writing the stub for the LegalMoveEnforcer and the Engine??
-pub enum Position {
-    StartPosition,
-    TestQueen,
-    TestKing,
-    TestRook,
-    TestKnight,
-    TestPawn,
-}
-
-fn start_position() -> [char; 64] {
+// rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR
+fn _start_position() -> [char; 64] {
     return ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r',
             'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p',
             '-', '-', '-', '-', '-', '-', '-', '-',
@@ -238,7 +241,8 @@ fn start_position() -> [char; 64] {
             'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'];
 }
 
-fn test_queen() -> [char; 64] {
+// 8/3r4/8/3q1P2/8/8/6np/5k1Q
+fn _test_queen() -> [char; 64] {
     return ['-', '-', '-', '-', '-', '-', '-', '-',
             '-', '-', '-', 'r', '-', '-', '-', '-',
             '-', '-', '-', '-', '-', '-', '-', '-',
@@ -249,7 +253,8 @@ fn test_queen() -> [char; 64] {
             '-', '-', '-', '-', '-', 'k', '-', 'Q',];
 }
 
-fn test_king() -> [char; 64] {
+// 8/8/8/8/8/8/3r1PPP/R3K2R 
+fn _test_king() -> [char; 64] {
     return ['-', '-', '-', '-', '-', '-', '-', '-',
             '-', '-', '-', '-', '-', '-', '-', '-',
             '-', '-', '-', '-', '-', '-', '-', '-',
@@ -260,7 +265,8 @@ fn test_king() -> [char; 64] {
             'R', '-', '-', '-', 'K', '-', '-', 'R',];
 }
 
-fn test_knight() -> [char; 64] {
+// 8/8/8/8/2N5/P7/1P1r2pp/7n
+fn _test_knight() -> [char; 64] {
     return ['-', '-', '-', '-', '-', '-', '-', '-',
             '-', '-', '-', '-', '-', '-', '-', '-',
             '-', '-', '-', '-', '-', '-', '-', '-',
@@ -271,7 +277,8 @@ fn test_knight() -> [char; 64] {
             '-', '-', '-', '-', '-', '-', '-', 'n',];
 }
 
-fn test_pawn() -> [char; 64] {
+// 8/4p2p/4K3/8/2n5/1P6/6P1/8
+fn _test_pawn() -> [char; 64] {
     return ['-', '-', '-', '-', '-', '-', '-', '-',
             '-', '-', '-', '-', 'p', '-', '-', 'p',
             '-', '-', '-', '-', 'K', '-', '-', '-',
@@ -282,7 +289,8 @@ fn test_pawn() -> [char; 64] {
             '-', '-', '-', '-', '-', '-', '-', '-',];
 }
 
-fn test_rook() -> [char; 64] {
+// 8/3p4/8/3r1P2/8/8/6np/5Q1R
+fn _test_rook() -> [char; 64] {
     return ['-', '-', '-', '-', '-', '-', '-', '-',
             '-', '-', '-', 'p', '-', '-', '-', '-',
             '-', '-', '-', '-', '-', '-', '-', '-',
