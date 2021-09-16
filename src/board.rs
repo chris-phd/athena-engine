@@ -3,6 +3,7 @@ use crate::utils::log;
 use crate::pieces::{ChessMove, MoveType};
 
 /// The Chess Board. Stores the position of the chess pieces.
+#[derive(Clone, Copy)]
 pub struct Board {
     squares : [char; 64],
     is_white_to_move : bool,
@@ -100,9 +101,6 @@ impl Board {
     }
 
     pub fn make_move(&mut self, chess_move: ChessMove) {
-        console_log!("board::Board::make_move: Finish implementing me!");
-        console_log!("    is_white_to_move = {}", self.is_white_to_move);
-        console_log!("   castel king side white avaliable = {}", self.castle_king_side_white_avaliable);
         if (self.is_white_to_move && !chess_move.piece.is_uppercase()) ||
            (!self.is_white_to_move && chess_move.piece.is_uppercase()) {
             return;
@@ -159,6 +157,10 @@ impl Board {
         return self.is_white_to_move;
     }
 
+    pub fn set_is_white_to_move(&mut self, is_white_to_move: bool) {
+        self.is_white_to_move = is_white_to_move;
+    }
+
     /// Methods for checking if a square is free
     pub fn is_occupied(&self, rank_file: [usize; 2]) -> bool {
         let piece = self.get_piece_on_square(rank_file);
@@ -186,8 +188,29 @@ impl Board {
         return piece == 'k' || piece == 'K';
     }
 
+    pub fn get_king_rank_file(&self) -> [usize; 2] {
+        for rank in (1 as usize)..9 {
+            for file in (1 as usize)..9 {
+                let piece = self.get_piece_on_square([rank, file]);
+                if ( self.is_white_to_move && piece == 'K' )  ||
+                   (!self.is_white_to_move && piece == 'k') {
+                    return [rank, file];
+                }
+            }
+        }
+
+        // King not found. Return an invalid rank and file
+        return [0, 0];
+    }
+
     pub fn is_valid_rank_file(&self, rank_file: [usize; 2]) -> bool {
         return !(rank_file[0] > 8 || rank_file[0] < 1 || rank_file[1] > 8 || rank_file[1] < 1);
+    }
+
+    /// Change the value of a square without making a move. Should never be
+    /// called to deal with a player move, used to remove pieces when validating checkmates.
+    pub fn clear_square(&mut self, rank_file: [usize; 2]) {
+        self.squares[self.square_index(rank_file)] = '-';
     }
 
     /// Moves the piece from src to dest, and leaves the src square empty

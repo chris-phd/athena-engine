@@ -88,7 +88,6 @@ impl ChessMove {
 
 /// Returns all possible pawn moves from a given square
 pub fn pawn_moves(board: &Board, rank_file: [usize; 2], is_white: bool) -> Vec<ChessMove> {
-    console_log!("pieces::pawn_moves:");
     let mut all_possible_moves = pawn_capture_moves(&board, rank_file, is_white);
     all_possible_moves.append(&mut pawn_non_capture_moves(&board, rank_file, is_white));
     return all_possible_moves;
@@ -161,7 +160,6 @@ fn pawn_non_capture_moves(board: &Board, src_rank_file: [usize; 2], is_white: bo
 
 /// Returns all knight moves from a given square
 pub fn knight_moves(board: &Board, src_rank_file: [usize; 2], is_white: bool) -> Vec<ChessMove> {
-    console_log!("pieces::knight_moves:");
     let mut all_possible_moves : Vec<ChessMove> = vec![];
 
     let movements = vec![
@@ -189,7 +187,6 @@ pub fn knight_moves(board: &Board, src_rank_file: [usize; 2], is_white: bool) ->
 
 /// Returns all the bishop moves from a given square
 pub fn bishop_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMove> {
-    console_log!("pieces::bishop_moves: ");
     let movements = vec![
         DeltaRankFile { delta_rank: -1, delta_file:  1, },
         DeltaRankFile { delta_rank:  1, delta_file:  1, },
@@ -202,7 +199,6 @@ pub fn bishop_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<Chess
 
 /// Returns all possible rook moves from a given square
 pub fn rook_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMove> {
-    console_log!("pieces::rook_moves: ");
     let movements = vec![
         DeltaRankFile { delta_rank: -1, delta_file:  0, },
         DeltaRankFile { delta_rank:  0, delta_file:  1, },
@@ -241,7 +237,6 @@ fn slide_moves(movements: Vec<DeltaRankFile>, board: &Board, src: [usize; 2], is
 
 /// Returns all possible queen moves from a given square
 pub fn queen_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMove> {
-    console_log!("pieces::queen_moves:");
     let mut all_possible_moves = rook_moves(&board, src, is_white);
     all_possible_moves.append(&mut bishop_moves(&board, src, is_white));
     return all_possible_moves;
@@ -249,7 +244,6 @@ pub fn queen_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessM
 
 /// Returns all possible queen moves from a given square
 pub fn king_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMove> {
-    console_log!("pieces::king_moves: todo");
     let move_into_check_allowed = false;
     let mut all_possible_moves = king_standard_moves(board, src, is_white, move_into_check_allowed);
     all_possible_moves.append(&mut king_castle_moves(board, src, is_white));
@@ -259,7 +253,6 @@ pub fn king_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMo
 
 /// Returns legal standard king moves from the current position
 pub fn king_standard_moves(board: &Board, src: [usize; 2], is_white: bool, move_into_check_allowed: bool) -> Vec<ChessMove> {
-    console_log!("pieces::king_standard_moves:");
     let mut standard_moves : Vec<ChessMove> = vec![];
     let movements = vec![
         DeltaRankFile { delta_rank: -1, delta_file:  0, },
@@ -294,7 +287,6 @@ pub fn king_standard_moves(board: &Board, src: [usize; 2], is_white: bool, move_
 
 /// Returns legal castle moves from the current position
 pub fn king_castle_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMove> {
-    console_log!("pieces::king_castle_moves: todo ");
     let mut possible_castle_moves : Vec<ChessMove> = vec![];
 
     if is_square_attacked(&board, src, !is_white) {
@@ -408,7 +400,12 @@ fn is_slide_clear_for_capture(board: &Board, src: [usize; 2], dest: [usize; 2], 
 
 /// Returns true if a square is attacked by a piece of a specified colour.
 pub fn is_square_attacked(board : &Board, rank_file : [usize; 2], is_attacked_by_white : bool) -> bool {
-    eprintln!("[chess_move::is_square_attacked]: ");
+    let num_attackers = pieces_attacking_square(&board, rank_file, is_attacked_by_white).len();
+    return num_attackers > 0;
+}
+
+/// Returns the possible moves capable of attacking the target rank_file.
+pub fn pieces_attacking_square(board : &Board, rank_file : [usize; 2], is_attacked_by_white : bool) -> Vec<ChessMove> {
 
     // Order of the pieces in the move_functions vector must match the order
     // in the piece types vector
@@ -417,6 +414,7 @@ pub fn is_square_attacked(board : &Board, rank_file : [usize; 2], is_attacked_by
         &king_moves_move_into_check_allowed];
     let piece_types = vec!['Q', 'B', 'N', 'R', 'P', 'K'];
 
+    let mut attacking_squares : Vec<ChessMove> = vec![]; 
     for i in 0..piece_types.len() {
 
         let is_white = !is_attacked_by_white;
@@ -431,12 +429,20 @@ pub fn is_square_attacked(board : &Board, rank_file : [usize; 2], is_attacked_by
             let piece_on_attacking_square = board.get_piece_on_square(attacking_square);
             let piece_type = piece_on_attacking_square.to_ascii_uppercase();
             if piece_type == piece_types[i] {
-                return true;
+                let mut attacking_move = piece_move;
+                attacking_move.dest = piece_move.src;
+                attacking_move.src = piece_move.dest;
+                if is_attacked_by_white {
+                    attacking_move.piece = piece_type;
+                } else {
+                    attacking_move.piece = piece_type.to_ascii_lowercase();
+                }
+                attacking_squares.push(attacking_move);
             }
         }
     }
 
-    return false;
+    return attacking_squares;
 }
 
 #[cfg(test)]
