@@ -56,6 +56,10 @@ impl GameState {
         self.board.set_board_from_fen_string(fen_string);
     }
 
+    pub fn reset_board(&mut self) {
+        self.board = Board::new();
+    }
+
     pub fn is_move_legal(&mut self, src_coords: &str, dest_coords: &str) -> u8 {
         console_log!("GameState::is_move_legal: todo!");
 

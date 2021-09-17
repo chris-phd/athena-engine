@@ -27,6 +27,7 @@ pub enum MoveType {
     Standard,
     CastleKingSide,
     CastleQueenSide,
+    EnPassant,
 }
 
 /// ChessMove, represents a move made by a player
@@ -54,23 +55,27 @@ impl ChessMove {
         }
     }
 
-    pub fn set_move(&mut self, board: &Board, src: [usize; 2], 
-        dest: [usize; 2]) {
+    pub fn set_move(&mut self, board: &Board, src: [usize; 2], dest: [usize; 2]) {
         
         self.src = src;
         self.dest = dest;
         self.piece = board.get_piece_on_square(src);
 
-        // TODO, check the current board position to see if this move
-        // is a special move. en_passant / castle move / promotion.
         if (self.piece == 'k' || self.piece == 'K') && src[1] == 5 {
             if dest[1] == 7 {
                 self.move_type = MoveType::CastleKingSide;
             } else if dest[1] == 3 {
-                console_log!("set_move: CastleQueenSide");
                 self.move_type = MoveType::CastleQueenSide;
             }
         }
+
+        if (self.piece == 'p' || self.piece == 'P') && 
+            dest[0] == board.get_en_passant_square()[0] && 
+            dest[1] == board.get_en_passant_square()[1] {
+            self.move_type = MoveType::EnPassant;
+        }
+
+        // todo! check if this move is a promotion
     }
 
     pub fn is_the_same_as(&self, that: &ChessMove) -> bool {
@@ -114,7 +119,10 @@ fn pawn_capture_moves(board: &Board, rank_file: [usize; 2], is_white: bool) -> V
     for capture_movement in capture_movements {
         let dest_rank_file = capture_movement.dest_from_src(rank_file);
         if board.is_valid_rank_file(dest_rank_file) &&
-           is_capture(&board, dest_rank_file, is_white) {
+           (is_capture(&board, dest_rank_file, is_white) || 
+            (dest_rank_file[0] == board.get_en_passant_square()[0] && 
+            dest_rank_file[1] == board.get_en_passant_square()[1])) {
+
             let possible_move = ChessMove::new(&board, rank_file, dest_rank_file);
             non_capture_moves.push(possible_move);
         }

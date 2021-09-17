@@ -39,6 +39,8 @@ function setupConfigGUI() {
 function resetBoard() {
     console.log("resetBoard");
 
+    globalGameState.reset_board();
+
     var whitePlayerElement = document.getElementById("white-player-type");
     var blackPlayerElement = document.getElementById("black-player-type");
     var chessPositionElement = document.getElementById("chess-position");

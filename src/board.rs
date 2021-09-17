@@ -16,7 +16,6 @@ pub struct Board {
 
 impl Board {
     pub fn new() -> Board {
-        console_log!("board::Board::new: ");
         let set_squares: [char; 64] = ['-'; 64];
 
         let mut board = Board {
@@ -73,12 +72,16 @@ impl Board {
                 (!is_white && self.castle_queen_side_black_avaliable);
     }
 
+    pub fn get_en_passant_square(&self) -> [usize; 2] {
+        return self.en_passant_sq;
+    }
+
     /// Returns the current board position as an array of ints. 
     /// 0 = empty squares, odd num = black, even num = white
     /// 1, 2 = pawn. 3, 4 = knight. 5, 6 = bishop, 7, 8 = rook, 
     /// 9, 10 = queen. 11, 12 = king
+    /// The 65th square is a bool, showing if the position is checkmate.
     pub fn get_current_position(&self) -> Vec<u8> {
-        console_log!("board::Board::get_current_position:");
         let mut current_position = vec![0 as u8; 64];
         for i in 0..64 {
             match self.squares[i] {
@@ -107,9 +110,38 @@ impl Board {
         }
         
         self.move_piece(chess_move.src, chess_move.dest);
+        self.en_passant_sq = [0, 0];
 
         match chess_move.move_type {
-            MoveType::Standard => { } , // TODO! check if an enpassant square becomes avaliable or if the king loses caste lrights 
+            MoveType::Standard => { 
+
+                // Check if an enpassant square becomes avaliable
+                if chess_move.piece == 'P' && chess_move.src[0] == 2 && chess_move.dest[0] == 4 {
+                    self.en_passant_sq = [3, chess_move.src[1]];
+                } else if chess_move.piece == 'p' && chess_move.src[0] == 7 && chess_move.dest[0] == 5 {
+                    self.en_passant_sq = [6, chess_move.src[1]];
+                }
+
+
+                // Check if the king loses castle rights.
+                if chess_move.piece == 'K' {
+                    self.castle_king_side_white_avaliable = false;
+                    self.castle_queen_side_white_avaliable = false;
+                } else if chess_move.piece == 'k' {
+                    self.castle_king_side_black_avaliable = false;
+                    self.castle_queen_side_black_avaliable = false;
+                }
+
+                if self.get_piece_on_square([1, 1]) != 'R' {
+                    self.castle_queen_side_white_avaliable = false;
+                } else if self.get_piece_on_square([1, 8]) != 'R' {
+                    self.castle_king_side_white_avaliable = false;
+                } else if self.get_piece_on_square([8, 1]) != 'r' {
+                    self.castle_queen_side_black_avaliable = false;
+                } else if self.get_piece_on_square([8, 8]) != 'r' {
+                    self.castle_king_side_black_avaliable = false;
+                }
+            } , 
             MoveType::CastleKingSide =>  {
                 let rook_src  : [usize; 2] = [chess_move.src[0], 8];
                 let rook_dest : [usize; 2] = [rook_src[0], 6];
@@ -117,8 +149,10 @@ impl Board {
                 self.move_piece(rook_src, rook_dest);
                 if chess_move.is_white_piece() {
                     self.castle_king_side_white_avaliable = false;
+                    self.castle_queen_side_white_avaliable = false;
                 } else {
                     self.castle_king_side_black_avaliable = false;
+                    self.castle_queen_side_black_avaliable = false;
                 }
             },
             MoveType::CastleQueenSide => {
@@ -128,10 +162,21 @@ impl Board {
                 self.move_piece(rook_src, rook_dest);
                 if chess_move.is_white_piece() {
                     self.castle_queen_side_white_avaliable = false;
+                    self.castle_king_side_white_avaliable = false;
                 } else {
                     self.castle_queen_side_black_avaliable = false;
+                    self.castle_king_side_white_avaliable = false;
                 }
             },
+            MoveType::EnPassant => {
+                if chess_move.piece == 'P' {
+                    self.clear_square([chess_move.dest[0] - 1, chess_move.dest[1]]);
+                } else if chess_move.piece == 'p' {
+                    self.clear_square([chess_move.dest[0] + 1, chess_move.dest[1]]);
+                } else {
+                    assert!(false);
+                }
+            }
         }
 
         self.is_white_to_move = !self.is_white_to_move;
@@ -144,7 +189,6 @@ impl Board {
 
     /// Render the board to the console. Only used when running the tests.
     pub fn render(&self) {
-        console_log!("board::Board::render: todo!");
         for rank in (1..=8).rev() {
             for file in 1..=8 {
                 eprint!(" {} ", self.get_piece_on_square([rank, file]));
@@ -207,8 +251,7 @@ impl Board {
         return !(rank_file[0] > 8 || rank_file[0] < 1 || rank_file[1] > 8 || rank_file[1] < 1);
     }
 
-    /// Change the value of a square without making a move. Should never be
-    /// called to deal with a player move, used to remove pieces when validating checkmates.
+    /// Change the value of a square without making a move.
     pub fn clear_square(&mut self, rank_file: [usize; 2]) {
         self.squares[self.square_index(rank_file)] = '-';
     }
