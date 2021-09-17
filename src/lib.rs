@@ -51,6 +51,10 @@ impl GameState {
         return self.board.get_current_position();
     }
 
+    pub fn is_checkmate(&mut self) -> bool {
+        return self.board.is_checkmate();
+    }
+
     pub fn set_board(&mut self, fen_string: &str) {
         console_log!("GameState::set_board:");
         self.board.set_board_from_fen_string(fen_string);
@@ -96,7 +100,7 @@ impl GameState {
     pub fn is_computer_move(&self) -> bool {
         console_log!("GameState::is_computer_move: ");
 
-        if rules::is_checkmate(&self.board) {
+        if self.board.is_checkmate() {
             return false;
         }
 

@@ -32,8 +32,11 @@ function setupPage() {
 // Config GUI
 function setupConfigGUI() {
 
-    var resetButon = document.getElementById("reset-board-button");
-    resetButon.onclick = resetBoard;
+    var resetButton = document.getElementById("reset-board-button");
+    resetButton.onclick = resetBoard;
+
+    var checkmatePopupCloseButton = document.getElementById("checkmate-close-button");
+    checkmatePopupCloseButton.onclick = toggleCheckmatePopup;
 }
 
 function resetBoard() {
@@ -57,6 +60,8 @@ function resetBoard() {
     var fenString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     if (chessPosition == "Test Queen") {
         fenString = "8/6R1/3n4/8/1r1Q4/8/4p1P1/K1k5 w KQkq - 0 1";
+    } else if (chessPosition == "Test Checkmate") {
+        fenString = "6k1/5ppp/8/1R6/8/2K5/8/8 w KQkq - 0 1";
     }
     setBoardFromFenString(fenString);
     globalGameState.set_board(fenString);
@@ -130,6 +135,11 @@ function onDrop(event) {
 function updateBoard() {
     var updated_position = globalGameState.get_board();
     setBoardFromArrayOfEnums(updated_position);
+    if (globalGameState.is_checkmate()) {
+        // create a popup
+        console.log("[updateBoard]: CHECKMATE");
+        toggleCheckmatePopup();
+    }
 }
 
 function isCaptureMove(htmlElement) {
@@ -343,6 +353,11 @@ function makeComputerMove() {
     if (globalGameState.is_computer_move()) {
         makeComputerMove();
     }
+}
+
+function toggleCheckmatePopup() {
+    console.log("js::toggleCheckmatePopup:");
+    document.getElementById("checkmate-popup").classList.toggle("active");
 }
 
 // Helpers

@@ -1,6 +1,6 @@
 use crate::console_log;
 use crate::utils::log;
-use crate::pieces::{ChessMove, MoveType};
+use crate::pieces::{ChessMove, MoveType, is_square_attacked, pieces_attacking_square, king_standard_moves};
 
 /// The Chess Board. Stores the position of the chess pieces.
 #[derive(Clone, Copy)]
@@ -75,12 +75,11 @@ impl Board {
     pub fn get_en_passant_square(&self) -> [usize; 2] {
         return self.en_passant_sq;
     }
-
+    
     /// Returns the current board position as an array of ints. 
     /// 0 = empty squares, odd num = black, even num = white
     /// 1, 2 = pawn. 3, 4 = knight. 5, 6 = bishop, 7, 8 = rook, 
     /// 9, 10 = queen. 11, 12 = king
-    /// The 65th square is a bool, showing if the position is checkmate.
     pub fn get_current_position(&self) -> Vec<u8> {
         let mut current_position = vec![0 as u8; 64];
         for i in 0..64 {
@@ -101,6 +100,46 @@ impl Board {
             }
         }
         return current_position;
+    }
+
+    pub fn is_checkmate(&self) -> bool {
+        // Check if the king is in check
+        let king_rank_file = self.get_king_rank_file();
+        console_log!("king rank and file = {:?}", king_rank_file);
+        let is_white = self.white_to_move();
+        if !is_square_attacked(&self, king_rank_file, !is_white) {
+            return false;
+        }
+
+        // Check if the king can move any where. need to modify the board for this
+        let possible_moves = king_standard_moves(&self, king_rank_file, is_white, false);
+        let mut board_copy = self.clone();
+        board_copy.clear_square(king_rank_file);
+        for possible_move in possible_moves {
+            let dest = possible_move.dest;
+            if !is_square_attacked(&board_copy, dest, !is_white) {            
+                console_log!("king can move to safety on {:?}", dest);
+                return false;
+            }
+        }
+
+        // Check if the attacking piece can be captured, or if the attack can be
+        // intercepted (by moving a friendly piece in front of the attack)
+        let attacking_moves = pieces_attacking_square(&self, king_rank_file, !is_white);
+        console_log!("num attacking moves = {}", attacking_moves.len());
+        for attacking_move in attacking_moves {
+            if is_square_attacked(&self, attacking_move.src, is_white) {
+                console_log!("attacking piece can be captured");
+                return false;
+            }
+
+            if can_attack_be_intercepted(&self, attacking_move) {
+                console_log!("attack can be intercepted");
+                return false;
+            }
+        }
+
+        return true;
     }
 
     pub fn make_move(&mut self, chess_move: ChessMove) {
@@ -289,80 +328,72 @@ impl Board {
     }
 }
 
-/// Chess board position pre-sets
-/// TODO! Replace these with fenStrings and write a 
-/// set_board_from_fen function. fenStrings will be used
-/// to pass the state of the board back and forth between
-/// the js front end and rust backend.
+/// Checks if a checkmating attack can be intercepted by another piece
+fn can_attack_be_intercepted(board : &Board, attacking_move : ChessMove) -> bool {
+    let piece_type = attacking_move.piece.to_ascii_uppercase();
+    let is_white = attacking_move.piece.is_uppercase();
 
-// rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR
-fn _start_position() -> [char; 64] {
-    return ['r', 'n', 'b', 'q', 'k', 'b', 'n', 'r',
-            'p', 'p', 'p', 'p', 'p', 'p', 'p', 'p',
-            '-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', '-', '-', '-', '-', '-',
-            'P', 'P', 'P', 'P', 'P', 'P', 'P', 'P',
-            'R', 'N', 'B', 'Q', 'K', 'B', 'N', 'R'];
+    // The attacked piece can not intercept the attack, so remove from the board when
+    // checking for intercepts
+    let mut board_copy = board.clone();
+    board_copy.clear_square(attacking_move.dest);
+
+    // Only moves from sliding pieces can be intercepted.
+    if piece_type != 'R' && piece_type != 'B' && piece_type != 'Q' {
+        return false;
+    }
+
+    console_log!("attacking piece = {}", attacking_move.piece);
+
+    // todo, is there a way to reduce repetition with pieces::is_slide_clear_for_non_capture? 
+    let rank_dir = (attacking_move.dest[0] as i32 - attacking_move.src[0] as i32).signum();
+    let file_dir = (attacking_move.dest[1] as i32 - attacking_move.src[1] as i32).signum();
+    let mut traversed = [(attacking_move.src[0] as i32 + rank_dir) as usize,
+                        (attacking_move.src[1] as i32 + file_dir) as usize];
+
+    while traversed[0] != attacking_move.dest[0] || traversed[1] != attacking_move.dest[1] {
+
+        if is_square_attacked(&board_copy, traversed, !is_white) {
+            // The sliding attack can be intercepted.
+            console_log!("traversed = {:?}", traversed);
+            return true;
+        }
+
+        traversed[0] = (traversed[0] as i32 + rank_dir) as usize;
+        traversed[1] = (traversed[1] as i32 + file_dir) as usize;
+    }
+
+    return false;
 }
 
-// 8/3r4/8/3q1P2/8/8/6np/5k1Q
-fn _test_queen() -> [char; 64] {
-    return ['-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', 'r', '-', '-', '-', '-',
-            '-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', 'q', '-', 'P', '-', '-',
-            '-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', '-', '-', '-', 'n', 'p',
-            '-', '-', '-', '-', '-', 'k', '-', 'Q',];
-}
+#[cfg(test)]
+mod tests {
+    use crate::console_log;
+    use crate::board::Board;
 
-// 8/8/8/8/8/8/3r1PPP/R3K2R 
-fn _test_king() -> [char; 64] {
-    return ['-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', 'r', '-', 'P', 'P', 'P',
-            'R', '-', '-', '-', 'K', '-', '-', 'R',];
-}
+    #[test]
+    fn is_checkmate_test() {
+        let mut board = Board::new();
+        board.set_board_from_fen_string("8/6k1/8/8/8/8/5PPP/2r3K1");
+        board.render();
+        assert!( board.is_checkmate() );
 
-// 8/8/8/8/2N5/P7/1P1r2pp/7n
-fn _test_knight() -> [char; 64] {
-    return ['-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', 'N', '-', '-', '-', '-', '-',
-            'P', '-', '-', '-', '-', '-', '-', '-',
-            '-', 'P', '-', 'r', '-', '-', 'p', 'p',
-            '-', '-', '-', '-', '-', '-', '-', 'n',];
-}
+        board.set_board_from_fen_string("8/6k1/8/8/8/7P/5PP1/2r3K1");
+        assert!( !board.is_checkmate() );
 
-// 8/4p2p/4K3/8/2n5/1P6/6P1/8
-fn _test_pawn() -> [char; 64] {
-    return ['-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', '-', 'p', '-', '-', 'p',
-            '-', '-', '-', '-', 'K', '-', '-', '-',
-            '-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', 'n', '-', '-', '-', '-', '-',
-            '-', 'P', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', '-', '-', '-', 'P', '-',
-            '-', '-', '-', '-', '-', '-', '-', '-',];
-}
+        board.set_board_from_fen_string("8/6k1/8/8/8/4N3/5PPP/2r3K1");
+        board.render();
+        assert!( !board.is_checkmate() );
 
-// 8/3p4/8/3r1P2/8/8/6np/5Q1R
-fn _test_rook() -> [char; 64] {
-    return ['-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', 'p', '-', '-', '-', '-',
-            '-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', 'r', '-', 'P', '-', '-',
-            '-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', '-', '-', '-', '-', '-',
-            '-', '-', '-', '-', '-', '-', 'n', 'p',
-            '-', '-', '-', '-', '-', 'Q', '-', 'R',];
+        board.set_board_from_fen_string("8/6k1/8/8/5B2/8/5PPP/2r3K1");
+        assert!( !board.is_checkmate() );
+
+        board.set_board_from_fen_string("5rkb/5pnn/7N/8/8/4K3/8/8");
+        board.set_is_white_to_move(false);
+        assert!( board.is_checkmate());
+        
+        board.set_board_from_fen_string("5rkb/5ppn/7N/8/8/4K3/8/8");
+        board.set_is_white_to_move(false);
+        assert!( !board.is_checkmate());
+    } 
 }

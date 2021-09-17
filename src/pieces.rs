@@ -100,7 +100,6 @@ pub fn pawn_moves(board: &Board, rank_file: [usize; 2], is_white: bool) -> Vec<C
 
 /// Returns all possible pawn captures from a given square
 fn pawn_capture_moves(board: &Board, rank_file: [usize; 2], is_white: bool) -> Vec<ChessMove> {
-    console_log!("pieces::pawn_capture_moves: implement en passant capture.");
     let mut non_capture_moves : Vec<ChessMove> = vec![];
 
     let capture_movements;
