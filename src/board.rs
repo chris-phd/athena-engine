@@ -128,9 +128,22 @@ impl Board {
         let attacking_moves = pieces_attacking_square(&self, king_rank_file, !is_white);
         console_log!("num attacking moves = {}", attacking_moves.len());
         for attacking_move in attacking_moves {
-            if is_square_attacked(&self, attacking_move.src, is_white) {
-                console_log!("attacking piece can be captured");
-                return false;
+            let moves_to_capture_attacker = pieces_attacking_square(&self, attacking_move.src, is_white);
+            if moves_to_capture_attacker.len() > 0 {
+
+                console_log!("move to capture attacker src = {:?}", moves_to_capture_attacker[0].src);
+                console_log!("move to capture attacker dest = {:?}", moves_to_capture_attacker[0].dest);
+                console_log!("move to capture attacker piece = {:?}", moves_to_capture_attacker[0].piece);
+
+                // If this is the king capturing it's own attacker, make sure the king
+                // did not move into check.
+                if !(moves_to_capture_attacker.len() == 1 && 
+                   moves_to_capture_attacker[0].piece.to_ascii_uppercase() == 'K' &&
+                   is_square_attacked(&self, moves_to_capture_attacker[0].dest, !is_white) ) {
+
+                    console_log!("attacking piece can be captured");
+                    return false;
+                }
             }
 
             if can_attack_be_intercepted(&self, attacking_move) {
@@ -395,5 +408,12 @@ mod tests {
         board.set_board_from_fen_string("5rkb/5ppn/7N/8/8/4K3/8/8");
         board.set_is_white_to_move(false);
         assert!( !board.is_checkmate());
+
+        // Fix this edge case. King cannot capture attacking piece if it 
+        // involves theking moving into check
+        board.set_board_from_fen_string("8/8/8/8/8/3K4/3Q4/3k4");
+        board.set_is_white_to_move(false);
+        board.render();
+        assert!( board.is_checkmate() ); 
     } 
 }
