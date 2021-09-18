@@ -35,6 +35,7 @@
                     <option>Standard</option>
                     <option>Test Queen</option>
                     <option>Test Checkmate</option>
+                    <option>Test Promotion</option>
                 </select> <br>
                 <button id="reset-board-button">Reset game</button>
             </div>
@@ -52,6 +53,20 @@
         <div class="content"> 
             <div class="close-button" id="checkmate-close-button">&times;</div>
             <h1>Checkmate!</h1>
+        </div>
+    </div>
+
+    <div class="popup" id="pawn-promotion-popup"> 
+        <div class=overlay> </div>
+        <div class="content"> 
+            Promote to: 
+            <select id="selected-promotion" class="dropdown"> 
+                <option>Queen</option>
+                <option>Rook</option>
+                <option>Bishop</option>
+                <option>Knight</option>
+            </select><br>
+            <button id="submit-promotion">submit</button>
         </div>
     </div>
 

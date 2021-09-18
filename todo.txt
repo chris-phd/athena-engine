@@ -1,0 +1,3 @@
+- draws by threefold repetition
+- draws by stalemate
+- BUG, king can move away from a sliding attack to avoid check. engine thinks the king is still in it's old position

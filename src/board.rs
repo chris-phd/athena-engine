@@ -228,6 +228,42 @@ impl Board {
                 } else {
                     assert!(false);
                 }
+            },
+            MoveType::PromoteToQueen => {
+                let promoted_piece : char;
+                if chess_move.piece.is_ascii_uppercase() {
+                    promoted_piece = 'Q';
+                } else {
+                    promoted_piece = 'q';
+                }
+                self.squares[self.square_index(chess_move.dest)] = promoted_piece;
+            },
+            MoveType::PromoteToRook => {
+                let promoted_piece : char;
+                if chess_move.piece.is_ascii_uppercase() {
+                    promoted_piece = 'R';
+                } else {
+                    promoted_piece = 'r';
+                }
+                self.squares[self.square_index(chess_move.dest)] = promoted_piece;
+            },
+            MoveType::PromoteToBishop => {
+                let promoted_piece : char;
+                if chess_move.piece.is_ascii_uppercase() {
+                    promoted_piece = 'B';
+                } else {
+                    promoted_piece = 'b';
+                }
+                self.squares[self.square_index(chess_move.dest)] = promoted_piece;
+            },
+            MoveType::PromoteToKnight => {
+                let promoted_piece : char;
+                if chess_move.piece.is_ascii_uppercase() {
+                    promoted_piece = 'N';
+                } else {
+                    promoted_piece = 'n';
+                }
+                self.squares[self.square_index(chess_move.dest)] = promoted_piece;
             }
         }
 

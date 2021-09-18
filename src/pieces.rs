@@ -28,6 +28,10 @@ pub enum MoveType {
     CastleKingSide,
     CastleQueenSide,
     EnPassant,
+    PromoteToQueen,
+    PromoteToRook,
+    PromoteToBishop,
+    PromoteToKnight,
 }
 
 /// ChessMove, represents a move made by a player
@@ -55,6 +59,23 @@ impl ChessMove {
         }
     }
 
+    pub fn new_promotion(board: &Board, src: [usize; 2], dest: [usize; 2], promotionEnum: i32) -> ChessMove {
+        let mut new_move = ChessMove::new(&board, src, dest);
+        if promotionEnum == 1 {
+            new_move.move_type = MoveType::PromoteToQueen;
+        } else if promotionEnum == 2 {
+            new_move.move_type = MoveType::PromoteToRook;
+        } else if promotionEnum == 3 {
+            new_move.move_type = MoveType::PromoteToBishop;
+        } else if promotionEnum == 4 {
+            new_move.move_type = MoveType::PromoteToKnight;
+        } else {
+            // SHould never call this method without a valid promotion.
+            assert!(false);
+        }
+        return new_move; 
+    }
+
     pub fn set_move(&mut self, board: &Board, src: [usize; 2], dest: [usize; 2]) {
         
         self.src = src;
@@ -74,8 +95,6 @@ impl ChessMove {
             dest[1] == board.get_en_passant_square()[1] {
             self.move_type = MoveType::EnPassant;
         }
-
-        // todo! check if this move is a promotion
     }
 
     pub fn is_the_same_as(&self, that: &ChessMove) -> bool {

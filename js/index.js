@@ -1,5 +1,7 @@
 let lib = null;
 let globalGameState = null;
+let pawnPromotionSrc = "--";
+let pawnPromotionDest = "--";
 
 async function main() {
 
@@ -35,6 +37,9 @@ function setupConfigGUI() {
     var resetButton = document.getElementById("reset-board-button");
     resetButton.onclick = resetBoard;
 
+    var pawnPromotionButton = document.getElementById("submit-promotion");
+    pawnPromotionButton.onclick = submitSelectedPromotion;
+
     var checkmatePopupCloseButton = document.getElementById("checkmate-close-button");
     checkmatePopupCloseButton.onclick = toggleCheckmatePopup;
 }
@@ -62,6 +67,8 @@ function resetBoard() {
         fenString = "8/6R1/3n4/8/1r1Q4/8/4p1P1/K1k5 w KQkq - 0 1";
     } else if (chessPosition == "Test Checkmate") {
         fenString = "6k1/5ppp/8/1R6/8/2K5/8/8 w KQkq - 0 1";
+    } else if (chessPosition == "Test Promotion") {
+        fenString = "5k2/1P6/8/8/3K4/8/8/8 w KQkq - 0 1";
     }
     setBoardFromFenString(fenString);
     globalGameState.set_board(fenString);
@@ -116,19 +123,41 @@ function onDrop(event) {
     // Grab the rank and file from the src and destination squares
     var srcSquareCoords = srcSquare.id;
     var destSquareCoords = destSquare.id;
-    var is_move_legal = globalGameState.is_move_legal(srcSquareCoords, destSquareCoords);
+
+    if (!isPawnPromotion(id, destSquareCoords)) {
+        makeMove(srcSquareCoords, destSquareCoords, 0);
+    } else {
+        // Pawn promotion move will not be made right away. A popup is created
+        // that gets the promotion from the player. Only after that is the move made.
+        // currently using global variables to store the src and dest coords... not ideal
+        pawnPromotionSrc = srcSquareCoords;
+        pawnPromotionDest = destSquareCoords;
+        togglePromotionPopup();
+    }
+}
+
+/// Sends the selected move to the rust backend
+function makeMove(srcCoords, destCoords, selectedPromotion) {
+    
+    var is_move_legal = globalGameState.is_move_legal(srcCoords, destCoords);
     if (is_move_legal) {
         // Update the board
-        globalGameState.make_move(srcSquareCoords, destSquareCoords);
+        globalGameState.make_move(srcCoords, destCoords, selectedPromotion); // Add an extra parameter to deal with promotions
         updateBoard();
-    } else {
-        // Do nothing?
     }
 
     if (globalGameState.is_computer_move()) {
         makeComputerMove();
     }
+
 }
+
+/// Checks if the move entered by a human player is a promotion...
+function isPawnPromotion(pieceId, destSquareCoords) {
+    return (pieceId.includes("wP") && destSquareCoords.includes("8") ) ||
+           (pieceId.includes("bP") && destSquareCoords.includes("1") );
+}
+
 
 /// Grabs the updated board position from the rust backend and renders to the
 /// browser window.
@@ -355,9 +384,39 @@ function makeComputerMove() {
     }
 }
 
+/// Called on a button press when the user has selected the desired promotion.
+/// Passes the move to the rust back end.
+/// 1 = queen, 2 = rook, 3 = bishop, 4 = knight
+function submitSelectedPromotion() {
+    console.log("submit selected promotion");
+    // call make move...
+
+    var promotionElement = document.getElementById("selected-promotion");
+    var promotionStr = promotionElement.options[promotionElement.selectedIndex].value;
+
+    let promotionEnum = 0;
+    if (promotionStr == "Queen") {
+        promotionEnum = 1;
+    } else if (promotionStr == "Rook") {
+        promotionEnum = 2;
+    } else if (promotionStr == "Bishop") {
+        promotionEnum = 3;
+    } else if (promotionStr == "Knight") {
+        promotionEnum = 4;
+    }
+
+    makeMove(pawnPromotionSrc, pawnPromotionDest, promotionEnum);
+    pawnPromotionSrc = pawnPromotionDest = "--";
+
+    togglePromotionPopup();
+}
+
 function toggleCheckmatePopup() {
-    console.log("js::toggleCheckmatePopup:");
     document.getElementById("checkmate-popup").classList.toggle("active");
+}
+
+function togglePromotionPopup() {
+    document.getElementById("pawn-promotion-popup").classList.toggle("active");
 }
 
 // Helpers

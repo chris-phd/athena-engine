@@ -74,12 +74,17 @@ impl GameState {
     }
 
     /// Enters the move entered by a human player
-    pub fn make_move(&mut self, src_coords: &str, dest_coords: &str) {
-        console_log!("GameState::make_move: todo!");
+    pub fn make_move(&mut self, src_coords: &str, dest_coords: &str, promotion: i32) {
+        console_log!("GameState::make_move:");
 
         let src_rank_file = coord_to_rank_file(src_coords);
         let dest_rank_file = coord_to_rank_file(dest_coords);
-        let chess_move = ChessMove::new(&self.board, src_rank_file, dest_rank_file);
+        let chess_move : ChessMove;
+        if (promotion == 0) {
+            chess_move = ChessMove::new(&self.board, src_rank_file, dest_rank_file);
+        } else {
+            chess_move = ChessMove::new_promotion(&self.board, src_rank_file, dest_rank_file, promotion);
+        }
         self.board.make_move(chess_move);
 
     }
