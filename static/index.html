@@ -36,6 +36,7 @@
                     <option>Test Queen</option>
                     <option>Test Checkmate</option>
                     <option>Test Promotion</option>
+                    <option>Test Draw</option>
                 </select> <br>
                 <button id="reset-board-button">Reset game</button>
             </div>
@@ -48,11 +49,10 @@
         <p style="margin-left: 80px">Source: <a href="https://github.com/C-J-Cooper/athena-engine">Github</a> </p>
     </div>
 
-    <div class="popup" id="checkmate-popup"> 
+    <div class="popup" id="game-over-popup"> 
         <div class=overlay> </div>
-        <div class="content"> 
-            <div class="close-button" id="checkmate-close-button">&times;</div>
-            <h1>Checkmate!</h1>
+        <div class="content" id="game-over-popup-content"> 
+            <div class="close-button" id="game-over-close-button">&times;</div>
         </div>
     </div>
 

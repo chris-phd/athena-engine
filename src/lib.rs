@@ -55,6 +55,10 @@ impl GameState {
         return self.board.is_checkmate();
     }
 
+    pub fn is_draw(&mut self) -> bool {
+        return self.board.is_draw();
+    }
+
     pub fn set_board(&mut self, fen_string: &str) {
         console_log!("GameState::set_board:");
         self.board.set_board_from_fen_string(fen_string);

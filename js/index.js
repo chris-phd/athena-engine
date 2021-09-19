@@ -40,8 +40,9 @@ function setupConfigGUI() {
     var pawnPromotionButton = document.getElementById("submit-promotion");
     pawnPromotionButton.onclick = submitSelectedPromotion;
 
-    var checkmatePopupCloseButton = document.getElementById("checkmate-close-button");
-    checkmatePopupCloseButton.onclick = toggleCheckmatePopup;
+    console.log("Setting the gameover close button function");
+    var gameoverPopupCloseButton = document.getElementById("game-over-close-button");
+    gameoverPopupCloseButton.onclick = closeGameoverPopup;
 }
 
 function resetBoard() {
@@ -69,6 +70,8 @@ function resetBoard() {
         fenString = "6k1/5ppp/8/1R6/8/2K5/8/8 w KQkq - 0 1";
     } else if (chessPosition == "Test Promotion") {
         fenString = "5k2/1P6/8/8/3K4/8/8/8 w KQkq - 0 1";
+    } else if (chessPosition == "Test Draw") {
+        fenString = "8/3p4/1p6/pP6/P2K1q2/7r/6k1/8 w KQkq - 0 1";
     }
     setBoardFromFenString(fenString);
     globalGameState.set_board(fenString);
@@ -165,10 +168,10 @@ function updateBoard() {
     var updated_position = globalGameState.get_board();
     setBoardFromArrayOfEnums(updated_position);
     if (globalGameState.is_checkmate()) {
-        // create a popup
-        console.log("[updateBoard]: CHECKMATE");
-        toggleCheckmatePopup();
-    }
+        openGameoverPopup("Checkmate!");
+    } else if (globalGameState.is_draw()) {
+        openGameoverPopup("Draw!");
+    } 
 }
 
 function isCaptureMove(htmlElement) {
@@ -411,8 +414,18 @@ function submitSelectedPromotion() {
     togglePromotionPopup();
 }
 
-function toggleCheckmatePopup() {
-    document.getElementById("checkmate-popup").classList.toggle("active");
+function closeGameoverPopup() {
+    console.log("js::closeGameoverPopup");
+    let popupContentElement = document.getElementById("game-over-popup-content");
+    let messageElement = document.getElementById("game-over-message");
+    popupContentElement.removeChild(messageElement);
+    document.getElementById("game-over-popup").classList.toggle("active");
+}
+
+function openGameoverPopup(message) {
+    let popupContentElement = document.getElementById("game-over-popup-content");
+    popupContentElement.insertAdjacentHTML("beforeend","<h1 id=\"game-over-message\">" + message +"</h1>");
+    document.getElementById("game-over-popup").classList.toggle("active");
 }
 
 function togglePromotionPopup() {
