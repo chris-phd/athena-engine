@@ -1,6 +1,7 @@
 use crate::console_log;
 use crate::utils::log;
 use crate::pieces::{ChessMove, MoveType, is_square_attacked, pieces_attacking_square, king_standard_moves};
+use crate::rules::{all_possible_moves};
 
 /// The Chess Board. Stores the position of the chess pieces.
 #[derive(Clone, Copy)]
@@ -148,6 +149,28 @@ impl Board {
 
             if can_attack_be_intercepted(&self, attacking_move) {
                 console_log!("attack can be intercepted");
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    pub fn is_draw(&self) -> bool {
+
+        // Check for draw by three fold repetition
+
+
+        // Check for draw by stalemate
+        console_log!("is white to move = ");
+        let occupied_squares = self.all_occupied_squares(self.is_white_to_move);
+        console_log!("num occupied squares = {}", occupied_squares.len());
+        for occupied_square in occupied_squares {
+            console_log!("occupied square = {:?}", occupied_square);
+
+            // If there are any moves in the current position, not a stalemate
+            if all_possible_moves(&self, occupied_square).len() > 0 {
+                console_log!("There is at least one possible move");
                 return false;
             }
         }
@@ -344,6 +367,22 @@ impl Board {
         self.squares[self.square_index(rank_file)] = '-';
     }
 
+    /// Returns all the squares occupied by pieces of the specified
+    /// colour.
+    fn all_occupied_squares(&self, find_occupied_by_white: bool) -> Vec<[usize; 2]> {
+        let mut occupied_squares : Vec<[usize; 2]> = vec![];
+        for rank in (1 as usize)..(9 as usize) {
+            for file in (1 as usize)..(9 as usize) {
+                if ( find_occupied_by_white && self.is_occupied_by_white([rank, file]) ) ||
+                   (!find_occupied_by_white && self.is_occupied_by_black([rank, file]) ) {
+                    occupied_squares.push([rank, file]);
+                }
+            }
+        }
+
+        return occupied_squares;
+    }
+
     /// Moves the piece from src to dest, and leaves the src square empty
     fn move_piece(&mut self, src: [usize ; 2], dest: [usize; 2]) {
         let dest_index = self.square_index(dest);
@@ -451,5 +490,16 @@ mod tests {
         board.set_is_white_to_move(false);
         board.render();
         assert!( board.is_checkmate() ); 
-    } 
+    }
+    
+    #[test]
+    fn is_stalemate() {
+        let mut board = Board::new();
+        board.set_board_from_fen_string("8/8/p7/P7/5k2/6q1/8/7K");
+        board.render();
+        assert!( board.is_draw() );
+
+        board.set_board_from_fen_string("8/8/p7/P7/5kq1/8/8/7K");
+        assert!( !board.is_draw() );
+    }
 }

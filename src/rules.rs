@@ -45,6 +45,11 @@ pub fn all_possible_moves(board: &Board, rank_file: [usize; 2]) -> Vec<ChessMove
         _ => panic!(),
     }
 
+    // If the king is in check, cull any moves that don't take the king out of check
+    if board.is_king_in_check() {
+        
+    }
+
     // return moves;
     return moves;
 } 

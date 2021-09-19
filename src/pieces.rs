@@ -59,15 +59,15 @@ impl ChessMove {
         }
     }
 
-    pub fn new_promotion(board: &Board, src: [usize; 2], dest: [usize; 2], promotionEnum: i32) -> ChessMove {
+    pub fn new_promotion(board: &Board, src: [usize; 2], dest: [usize; 2], promotion_enum: i32) -> ChessMove {
         let mut new_move = ChessMove::new(&board, src, dest);
-        if promotionEnum == 1 {
+        if promotion_enum == 1 {
             new_move.move_type = MoveType::PromoteToQueen;
-        } else if promotionEnum == 2 {
+        } else if promotion_enum == 2 {
             new_move.move_type = MoveType::PromoteToRook;
-        } else if promotionEnum == 3 {
+        } else if promotion_enum == 3 {
             new_move.move_type = MoveType::PromoteToBishop;
-        } else if promotionEnum == 4 {
+        } else if promotion_enum == 4 {
             new_move.move_type = MoveType::PromoteToKnight;
         } else {
             // SHould never call this method without a valid promotion.
@@ -272,7 +272,14 @@ pub fn queen_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessM
 pub fn king_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMove> {
     let move_into_check_allowed = false;
     let mut all_possible_moves = king_standard_moves(board, src, is_white, move_into_check_allowed);
+    console_log!("num possible standard moves = {}", all_possible_moves.len());
     all_possible_moves.append(&mut king_castle_moves(board, src, is_white));
+    console_log!("num possible moves with castles = {}", all_possible_moves.len());
+
+    for possible_move in &all_possible_moves{
+        console_log!("    piece = {}, src = {:?}, dest = {:?}", possible_move.piece, possible_move.src, possible_move.dest);
+        console_log!("    is square attacked = {}", is_square_attacked(&board, possible_move.dest, !is_white));
+    }
 
     return all_possible_moves;
 }
@@ -405,6 +412,13 @@ fn is_slide_clear_for_non_capture(board: &Board, src: [usize; 2], dest: [usize; 
         traversed[0] = (traversed[0] as i32 + rank_dir) as usize;
         traversed[1] = (traversed[1] as i32 + file_dir) as usize;
     }
+
+
+    // Make sure the destination square doesn't put the king in check
+    if is_king && is_square_attacked(&board, dest, !is_white) {
+        return false;
+    }
+
 
     return true;                           
 }
@@ -583,6 +597,12 @@ mod tests {
         board.set_board_from_fen_string("8/8/8/8/8/8/3r1PPP/R3K2R");
         let src = [1 as usize, 5 as usize];
         let is_white = true;
-        assert_eq!( pieces::king_moves(&board, src, is_white).len(), 3);
+        // assert_eq!( pieces::king_moves(&board, src, is_white).len(), 3);
+
+        board.set_board_from_fen_string("8/8/p7/P7/5k2/6q1/8/7K");
+        board.render();
+        let src = [1 as usize, 8 as usize];
+        let is_white = true;
+        assert_eq!( pieces::king_moves(&board, src, is_white).len(), 0);
     }
 }

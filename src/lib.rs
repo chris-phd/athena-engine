@@ -80,7 +80,7 @@ impl GameState {
         let src_rank_file = coord_to_rank_file(src_coords);
         let dest_rank_file = coord_to_rank_file(dest_coords);
         let chess_move : ChessMove;
-        if (promotion == 0) {
+        if promotion == 0 {
             chess_move = ChessMove::new(&self.board, src_rank_file, dest_rank_file);
         } else {
             chess_move = ChessMove::new_promotion(&self.board, src_rank_file, dest_rank_file, promotion);
