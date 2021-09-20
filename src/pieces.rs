@@ -298,18 +298,23 @@ pub fn king_standard_moves(board: &Board, src: [usize; 2], is_white: bool, move_
         DeltaRankFile { delta_rank: -1, delta_file: -1, },
     ];
 
+    // Create a copy of the board without the king, otherwise the king's current position can
+    // cover potential checks.
+    let mut board_copy = board.clone();
+    board_copy.clear_square(src);
+
     for movement in movements {
         let dest = movement.dest_from_src(src);
         if !board.is_valid_rank_file(dest) {
             continue;
         }
 
-        if !move_into_check_allowed && is_square_attacked(&board, dest, !is_white) {
+        if !move_into_check_allowed && is_square_attacked(&board_copy, dest, !is_white) {
             // King should not move into check
             continue;
         }
         
-        if !board.is_occupied(dest) || is_capture_including_king_capture(&board, dest, is_white) {
+        if !board.is_occupied(dest) || is_capture_including_king_capture(&board_copy, dest, is_white) {
             let possible_move = ChessMove::new(&board, src, dest);
             standard_moves.push(possible_move);
         }
@@ -597,12 +602,17 @@ mod tests {
         board.set_board_from_fen_string("8/8/8/8/8/8/3r1PPP/R3K2R");
         let src = [1 as usize, 5 as usize];
         let is_white = true;
-        // assert_eq!( pieces::king_moves(&board, src, is_white).len(), 3);
+        assert_eq!( pieces::king_moves(&board, src, is_white).len(), 3);
 
         board.set_board_from_fen_string("8/8/p7/P7/5k2/6q1/8/7K");
         board.render();
         let src = [1 as usize, 8 as usize];
         let is_white = true;
         assert_eq!( pieces::king_moves(&board, src, is_white).len(), 0);
+
+        board.set_board_from_fen_string("2q2K2/8/8/1k6/8/8/8/8");
+        let src = [8 as usize, 6 as usize];
+        let is_white = true;
+        assert_eq!( pieces::king_moves(&board, src, is_white).len(), 3);        
     }
 }
