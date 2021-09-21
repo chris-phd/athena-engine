@@ -6,13 +6,6 @@ use crate::rules::all_possible_moves;
 
 use crate::Math::random;
 
-/// Evalutates the current position.
-pub fn _evaluate(_board: &Board) -> i32 {
-    console_log!("engine::evalutate: todo!");
-    let eval_score = 0;
-    return eval_score;
-}
-
 /// Generates the best chess move from the current position.
 pub fn best_move(_board: &Board) -> ChessMove {
     console_log!("engine::best_move: todo!");

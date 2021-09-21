@@ -1,2 +1,4 @@
 - draws by threefold repetition
+- implement draw if 50 moves pass without a piece being captured
+- implement draw if there is not enough material for both sides to checkmate (kings only)
 - remove circular dependencies between board, pieces and rules submodules

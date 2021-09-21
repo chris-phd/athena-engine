@@ -293,6 +293,12 @@ impl Board {
         self.is_white_to_move = !self.is_white_to_move;
     }
 
+    /// Returns the piece on the squar, specified by the square index
+    pub fn get_piece_by_square_index(&self, square_inx : usize) -> char {
+        assert!(square_inx < 64);
+        return self.squares[square_inx];
+    }
+    
     /// Returns the piece on the square specified by a rank and file. 
     pub fn get_piece_on_square(&self, rank_file: [usize; 2]) -> char {
         return self.squares[self.square_index(rank_file)];
@@ -452,6 +458,11 @@ fn can_attack_be_intercepted(board : &Board, attacking_move : ChessMove) -> bool
     }
 
     return false;
+}
+
+/// Tracks the moves played during a game. Used to find three fold repetition.
+struct MovesPlayed {
+
 }
 
 #[cfg(test)]

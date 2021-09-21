@@ -4,6 +4,7 @@ extern crate console_error_panic_hook;
 
 mod board;
 mod engine;
+mod evaluate;
 mod pieces;
 mod players;
 mod utils;
