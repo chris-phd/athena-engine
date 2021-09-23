@@ -112,9 +112,9 @@ impl ChessMove {
 
 /// Returns all possible pawn moves from a given square
 pub fn pawn_moves(board: &Board, rank_file: [usize; 2], is_white: bool) -> Vec<ChessMove> {
-    let mut all_possible_moves = pawn_capture_moves(&board, rank_file, is_white);
-    all_possible_moves.append(&mut pawn_non_capture_moves(&board, rank_file, is_white));
-    return all_possible_moves;
+    let mut possible_moves_from_square = pawn_capture_moves(&board, rank_file, is_white);
+    possible_moves_from_square.append(&mut pawn_non_capture_moves(&board, rank_file, is_white));
+    return possible_moves_from_square;
 }
 
 /// Returns all possible pawn captures from a given square
@@ -186,7 +186,7 @@ fn pawn_non_capture_moves(board: &Board, src_rank_file: [usize; 2], is_white: bo
 
 /// Returns all knight moves from a given square
 pub fn knight_moves(board: &Board, src_rank_file: [usize; 2], is_white: bool) -> Vec<ChessMove> {
-    let mut all_possible_moves : Vec<ChessMove> = vec![];
+    let mut possible_moves_from_square : Vec<ChessMove> = vec![];
 
     let movements = vec![
         DeltaRankFile { delta_rank: -1, delta_file:  2, },
@@ -204,11 +204,11 @@ pub fn knight_moves(board: &Board, src_rank_file: [usize; 2], is_white: bool) ->
         if board.is_valid_rank_file(dest_rank_file) && 
            (!board.is_occupied(dest_rank_file) || is_capture(&board, dest_rank_file, is_white) ) {
             let possible_move = ChessMove::new(&board, src_rank_file, dest_rank_file);
-            all_possible_moves.push(possible_move);
+            possible_moves_from_square.push(possible_move);
         }
     }
 
-    return all_possible_moves;
+    return possible_moves_from_square;
 }
 
 /// Returns all the bishop moves from a given square
@@ -239,7 +239,7 @@ pub fn rook_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMo
 /// Generates all possible moves from a square by sliding in the given directions.
 /// Used to generate the bishop and rook moves
 fn slide_moves(movements: Vec<DeltaRankFile>, board: &Board, src: [usize; 2], is_white: bool)-> Vec<ChessMove> {
-    let mut all_possible_moves : Vec<ChessMove> = vec![];
+    let mut possible_moves_from_square : Vec<ChessMove> = vec![];
 
     for movement in movements {
         let mut dest = movement.dest_from_src(src);
@@ -247,7 +247,7 @@ fn slide_moves(movements: Vec<DeltaRankFile>, board: &Board, src: [usize; 2], is
               (!board.is_occupied(dest) || is_capture(&board, dest, is_white) ) {
 
             let possible_move = ChessMove::new(&board, src, dest);
-            all_possible_moves.push(possible_move);
+            possible_moves_from_square.push(possible_move);
             
             if is_capture(&board, dest, is_white) {
                 break;
@@ -257,31 +257,31 @@ fn slide_moves(movements: Vec<DeltaRankFile>, board: &Board, src: [usize; 2], is
         }
     }
 
-    return all_possible_moves;
+    return possible_moves_from_square;
 }
 
 
 /// Returns all possible queen moves from a given square
 pub fn queen_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMove> {
-    let mut all_possible_moves = rook_moves(&board, src, is_white);
-    all_possible_moves.append(&mut bishop_moves(&board, src, is_white));
-    return all_possible_moves;
+    let mut possible_moves_from_square = rook_moves(&board, src, is_white);
+    possible_moves_from_square.append(&mut bishop_moves(&board, src, is_white));
+    return possible_moves_from_square;
 }
 
 /// Returns all possible queen moves from a given square
 pub fn king_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMove> {
     let move_into_check_allowed = false;
-    let mut all_possible_moves = king_standard_moves(board, src, is_white, move_into_check_allowed);
-    console_log!("num possible standard moves = {}", all_possible_moves.len());
-    all_possible_moves.append(&mut king_castle_moves(board, src, is_white));
-    console_log!("num possible moves with castles = {}", all_possible_moves.len());
+    let mut possible_moves_from_square = king_standard_moves(board, src, is_white, move_into_check_allowed);
+    console_log!("num possible standard moves = {}", possible_moves_from_square.len());
+    possible_moves_from_square.append(&mut king_castle_moves(board, src, is_white));
+    console_log!("num possible moves with castles = {}", possible_moves_from_square.len());
 
-    for possible_move in &all_possible_moves{
+    for possible_move in &possible_moves_from_square{
         console_log!("    piece = {}, src = {:?}, dest = {:?}", possible_move.piece, possible_move.src, possible_move.dest);
         console_log!("    is square attacked = {}", is_square_attacked(&board, possible_move.dest, !is_white));
     }
 
-    return all_possible_moves;
+    return possible_moves_from_square;
 }
 
 /// Returns legal standard king moves from the current position

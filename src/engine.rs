@@ -2,7 +2,7 @@ use crate::console_log;
 use crate::utils::{log, coord_to_rank_file};
 use crate::board::Board;
 use crate::pieces::ChessMove;
-use crate::rules::all_possible_moves;
+use crate::rules::possible_moves_from_square;
 
 use crate::Math::random;
 
@@ -23,7 +23,7 @@ pub fn random_move(board: &Board) -> ChessMove {
     let mut num_possible_moves = 0;
     while num_possible_moves == 0 && timeout_counter < 100 {
         let square_rank_file = get_random_piece_to_move(&board);
-        possible_moves = all_possible_moves(&board, square_rank_file);
+        possible_moves = possible_moves_from_square(&board, square_rank_file);
         num_possible_moves = possible_moves.len();
         console_log!("    num possible moves = {}, for piece on square {:?}", 
                      num_possible_moves, square_rank_file);

@@ -7,7 +7,7 @@ use crate::board::Board;
 pub fn is_move_legal(board: &Board, requested_move: &ChessMove) -> bool {
     console_log!("rules::is_move_legal: ");
     
-    let possible_moves = all_possible_moves(board, requested_move.src);
+    let possible_moves = possible_moves_from_square(board, requested_move.src);
 
     let mut is_legal = false;
     for possible_move in possible_moves {
@@ -26,9 +26,22 @@ pub fn is_move_legal(board: &Board, requested_move: &ChessMove) -> bool {
     return is_legal;
 }
 
-/// all_possible_moves: Given a chess board and a square, 
+/// all_possible_moves: Returns all the possible moves from the current
+/// position.
+pub fn all_possible_moves(board : &Board) -> Vec<ChessMove> {
+    let occupied_squares = board.all_occupied_squares(board.white_to_move());
+
+    let mut all_possible_moves : Vec<ChessMove> = vec![];
+    for square in occupied_squares {
+        all_possible_moves.append(&mut possible_moves_from_square(&board, square));
+    }
+
+    return all_possible_moves;
+}
+
+/// possible_moves_from_square: Given a chess board and a square, 
 /// generates all possible chess moves for the piece on that square.
-pub fn all_possible_moves(board: &Board, rank_file: [usize; 2]) -> Vec<ChessMove> {
+pub fn possible_moves_from_square(board: &Board, rank_file: [usize; 2]) -> Vec<ChessMove> {
 
     let piece = board.get_piece_on_square(rank_file);
     let is_white = piece.is_uppercase();

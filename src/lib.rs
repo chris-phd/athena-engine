@@ -7,6 +7,7 @@ mod engine;
 mod evaluate;
 mod pieces;
 mod players;
+mod search;
 mod utils;
 mod rules;
 

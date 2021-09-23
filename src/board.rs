@@ -1,7 +1,7 @@
 use crate::console_log;
 use crate::utils::log;
 use crate::pieces::{ChessMove, MoveType, is_square_attacked, pieces_attacking_square, king_standard_moves};
-use crate::rules::{all_possible_moves};
+use crate::rules::{possible_moves_from_square};
 
 /// The Chess Board. Stores the position of the chess pieces.
 #[derive(Clone, Copy)]
@@ -169,7 +169,7 @@ impl Board {
             console_log!("occupied square = {:?}", occupied_square);
 
             // If there are any moves in the current position, not a stalemate
-            if all_possible_moves(&self, occupied_square).len() > 0 {
+            if possible_moves_from_square(&self, occupied_square).len() > 0 {
                 console_log!("There is at least one possible move");
                 return false;
             }
@@ -375,7 +375,7 @@ impl Board {
 
     /// Returns all the squares occupied by pieces of the specified
     /// colour.
-    fn all_occupied_squares(&self, find_occupied_by_white: bool) -> Vec<[usize; 2]> {
+    pub fn all_occupied_squares(&self, find_occupied_by_white: bool) -> Vec<[usize; 2]> {
         let mut occupied_squares : Vec<[usize; 2]> = vec![];
         for rank in (1 as usize)..(9 as usize) {
             for file in (1 as usize)..(9 as usize) {

@@ -1,6 +1,11 @@
 use crate::board::Board;
 use crate::pieces;
 
+pub fn evaluate(board : &Board) -> f32 {
+    return evaluate_material(&board);
+}
+
+
 const KING_VAL : f32 = 200.0;
 const QUEEN_VAL : f32 = 9.0;
 const ROOK_VAL : f32 = 5.0;
@@ -8,7 +13,7 @@ const BISHOP_VAL : f32 = 3.0;
 const KNIGHT_VAL : f32 = 3.0;
 const PAWN_VAL : f32 = 1.0;
 
-pub fn evaluate_material(board : &Board) -> f32 {
+fn evaluate_material(board : &Board) -> f32 {
     let pieces = count_pieces(&board);
  
     let material_score: f32 = KING_VAL * (pieces.white_kings - pieces.black_kings) +
