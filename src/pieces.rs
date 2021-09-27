@@ -169,8 +169,6 @@ fn pawn_non_capture_moves(board: &Board, src_rank_file: [usize; 2], is_white: bo
     for non_capture_movement in non_capture_movements {
         let dest_rank_file = non_capture_movement.dest_from_src(src_rank_file);
 
-        console_log!("    pawn move dest = {:?}", dest_rank_file);
-
         if !board.is_valid_rank_file(dest_rank_file) ||
            board.is_occupied(dest_rank_file) {
             continue;
@@ -272,15 +270,7 @@ pub fn queen_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessM
 pub fn king_moves(board: &Board, src: [usize; 2], is_white: bool) -> Vec<ChessMove> {
     let move_into_check_allowed = false;
     let mut possible_moves_from_square = king_standard_moves(board, src, is_white, move_into_check_allowed);
-    console_log!("num possible standard moves = {}", possible_moves_from_square.len());
     possible_moves_from_square.append(&mut king_castle_moves(board, src, is_white));
-    console_log!("num possible moves with castles = {}", possible_moves_from_square.len());
-
-    for possible_move in &possible_moves_from_square{
-        console_log!("    piece = {}, src = {:?}, dest = {:?}", possible_move.piece, possible_move.src, possible_move.dest);
-        console_log!("    is square attacked = {}", is_square_attacked(&board, possible_move.dest, !is_white));
-    }
-
     return possible_moves_from_square;
 }
 

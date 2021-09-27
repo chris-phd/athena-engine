@@ -103,10 +103,15 @@ impl Board {
         return current_position;
     }
 
+    pub fn is_check(&self) -> bool {
+        let king_rank_file = self.get_king_rank_file();
+        let is_white = self.white_to_move();
+        return is_square_attacked(&self, king_rank_file, !is_white);
+    }
+
     pub fn is_checkmate(&self) -> bool {
         // Check if the king is in check
         let king_rank_file = self.get_king_rank_file();
-        console_log!("king rank and file = {:?}", king_rank_file);
         let is_white = self.white_to_move();
         if !is_square_attacked(&self, king_rank_file, !is_white) {
             return false;
@@ -132,23 +137,17 @@ impl Board {
             let moves_to_capture_attacker = pieces_attacking_square(&self, attacking_move.src, is_white);
             if moves_to_capture_attacker.len() > 0 {
 
-                console_log!("move to capture attacker src = {:?}", moves_to_capture_attacker[0].src);
-                console_log!("move to capture attacker dest = {:?}", moves_to_capture_attacker[0].dest);
-                console_log!("move to capture attacker piece = {:?}", moves_to_capture_attacker[0].piece);
-
                 // If this is the king capturing it's own attacker, make sure the king
                 // did not move into check.
                 if !(moves_to_capture_attacker.len() == 1 && 
                    moves_to_capture_attacker[0].piece.to_ascii_uppercase() == 'K' &&
                    is_square_attacked(&self, moves_to_capture_attacker[0].dest, !is_white) ) {
 
-                    console_log!("attacking piece can be captured");
                     return false;
                 }
             }
 
             if can_attack_be_intercepted(&self, attacking_move) {
-                console_log!("attack can be intercepted");
                 return false;
             }
         }

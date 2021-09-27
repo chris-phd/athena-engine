@@ -58,11 +58,20 @@ pub fn possible_moves_from_square(board: &Board, rank_file: [usize; 2]) -> Vec<C
         _ => panic!(),
     }
 
-    // // If the king is in check, cull any moves that don't take the king out of check
-    // if board.is_king_in_check() {
-    // }
+    // If the king is in check, cull any moves that don't take the king out of check
+    if board.is_check() {
+        let mut moves_without_check : Vec<ChessMove> = vec![];
+        for chess_move in moves {
+            let mut board_after_move = board.clone();
+            board_after_move.make_move(chess_move);
+            board_after_move.set_is_white_to_move(board.white_to_move());
+            if !board_after_move.is_check() {
+                moves_without_check.push(chess_move);
+            }
+        }
+        return moves_without_check;
+    }
 
-    // return moves;
     return moves;
 } 
 
@@ -71,20 +80,13 @@ pub fn possible_moves_from_square(board: &Board, rank_file: [usize; 2]) -> Vec<C
 mod tests {
     use crate::pieces::ChessMove;
     use crate::board::Board;
-    use crate::rules::{is_move_legal};
-
+    use crate::rules::{all_possible_moves, possible_moves_from_square};
 
     #[test]
-    fn king_legal_capture() {
-
+    fn remove_king_from_check() {
         let mut board = Board::new();
-        board.set_board_from_fen_string("8/8/8/8/8/8/3r1PPP/R3K2R");
-        board.render();
-        let mut requested_move = ChessMove::new_empty_move();
-
-        eprintln!("Test a regular capture");
-        requested_move.set_move(&board, [1 as usize, 5 as usize], [2 as usize, 4 as usize]);
-        assert!( is_move_legal(&board, &requested_move) );
-
+        board.set_board_from_fen_string("8/k7/8/3q1N2/8/8/2P1P3/3K4");
+        
+        assert_eq!(all_possible_moves(&board).len(), 3);
     }
 }
