@@ -199,7 +199,7 @@ pub fn knight_moves(board: &Board, src_rank_file: [usize; 2], is_white: bool) ->
 
     for movement in movements {
         let dest_rank_file = movement.dest_from_src(src_rank_file);
-        if board.is_valid_rank_file(dest_rank_file) && 
+        if board.is_valid_rank_file(src_rank_file) && board.is_valid_rank_file(dest_rank_file) && 
            (!board.is_occupied(dest_rank_file) || is_capture(&board, dest_rank_file, is_white) ) {
             let possible_move = ChessMove::new(&board, src_rank_file, dest_rank_file);
             possible_moves_from_square.push(possible_move);
@@ -241,7 +241,7 @@ fn slide_moves(movements: Vec<DeltaRankFile>, board: &Board, src: [usize; 2], is
 
     for movement in movements {
         let mut dest = movement.dest_from_src(src);
-        while board.is_valid_rank_file(dest) && 
+        while board.is_valid_rank_file(src) && board.is_valid_rank_file(dest) && 
               (!board.is_occupied(dest) || is_capture(&board, dest, is_white) ) {
 
             let possible_move = ChessMove::new(&board, src, dest);
@@ -287,6 +287,10 @@ pub fn king_standard_moves(board: &Board, src: [usize; 2], is_white: bool, move_
         DeltaRankFile { delta_rank:  0, delta_file: -1, },
         DeltaRankFile { delta_rank: -1, delta_file: -1, },
     ];
+
+    if !board.is_valid_rank_file(src) {
+        return standard_moves;
+    }
 
     // Create a copy of the board without the king, otherwise the king's current position can
     // cover potential checks.

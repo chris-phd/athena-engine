@@ -3,13 +3,20 @@ use crate::utils::{log, coord_to_rank_file};
 use crate::board::Board;
 use crate::pieces::ChessMove;
 use crate::rules::possible_moves_from_square;
+use crate::search::{Node, create_search_tree, find_best_move, count_leaves_in_tree};
 
 use crate::Math::random;
 
 /// Generates the best chess move from the current position.
-pub fn best_move(_board: &Board) -> ChessMove {
-    console_log!("engine::best_move: todo!");
-    let chess_move = ChessMove::new_empty_move();
+pub fn best_move(board: &Board, depth: usize) -> ChessMove {
+    console_log!("engine::best_move: ");
+    
+    let mut root = Node::new_root(&board);
+    create_search_tree(&mut root, depth);
+    let chess_move = find_best_move(&root, board.white_to_move());
+    
+    console_log!("    selected move, src = {:?}, dest = {:?}", chess_move.src, chess_move.dest);
+    
     return chess_move;
 }
 
@@ -67,4 +74,30 @@ fn get_random_piece_to_move(board: &Board) -> [usize; 2] {
 
 fn get_random_usize(max: usize) -> usize {
     return ( random() * (max as f64) ) as usize;
+}
+
+
+#[cfg(test)]
+mod tests {
+    use crate::console_log;
+    use crate::board::Board;
+    use crate::pieces::ChessMove;
+    use crate::engine::{best_move};
+
+    #[test]
+    fn hanging_queen() {
+
+        let mut board = Board::new();
+        board.set_board_from_fen_string("5rk1/5p1p/6p1/1q6/8/7P/5PP1/1R3RK1");
+        board.render();
+        let mut depth = 1 as usize;
+        let mut selected_move = best_move(&board, depth);
+        let known_best_move = ChessMove::new(&board, [1, 2], [5, 2]);
+        assert!(selected_move.is_the_same_as(&known_best_move));
+
+        depth = 3 as usize;
+        selected_move = best_move(&board, depth);
+        assert!(selected_move.is_the_same_as(&known_best_move));
+    }
+
 }

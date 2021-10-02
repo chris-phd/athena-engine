@@ -105,6 +105,9 @@ impl Board {
 
     pub fn is_check(&self) -> bool {
         let king_rank_file = self.get_king_rank_file();
+        if !self.is_valid_rank_file(king_rank_file) {
+            return false;
+        }
         let is_white = self.white_to_move();
         return is_square_attacked(&self, king_rank_file, !is_white);
     }
@@ -112,6 +115,9 @@ impl Board {
     pub fn is_checkmate(&self) -> bool {
         // Check if the king is in check
         let king_rank_file = self.get_king_rank_file();
+        if !self.is_valid_rank_file(king_rank_file) {
+            return false;
+        }
         let is_white = self.white_to_move();
         if !is_square_attacked(&self, king_rank_file, !is_white) {
             return false;
@@ -124,7 +130,6 @@ impl Board {
         for possible_move in possible_moves {
             let dest = possible_move.dest;
             if !is_square_attacked(&board_copy, dest, !is_white) {            
-                console_log!("king can move to safety on {:?}", dest);
                 return false;
             }
         }
@@ -132,7 +137,6 @@ impl Board {
         // Check if the attacking piece can be captured, or if the attack can be
         // intercepted (by moving a friendly piece in front of the attack)
         let attacking_moves = pieces_attacking_square(&self, king_rank_file, !is_white);
-        console_log!("num attacking moves = {}", attacking_moves.len());
         for attacking_move in attacking_moves {
             let moves_to_capture_attacker = pieces_attacking_square(&self, attacking_move.src, is_white);
             if moves_to_capture_attacker.len() > 0 {
@@ -417,6 +421,11 @@ impl Board {
     /// Convert the rank and file to the corresponding square index.
     /// Index from top left --> bottom right: a8, b8, c8 ... f1, g1, h1
     fn square_index(&self, rank_file : [usize; 2]) -> usize {
+        // eprintln!("rank file = {:?}", rank_file);
+        if !(rank_file[0] > 0 && rank_file[0] < 9 && 
+            rank_file[1] > 0 && rank_file[1] < 9) {
+            panic!("rank_file = {:?}", rank_file);
+        }
         return (8 - 1 - (rank_file[0]-1))*8 + (rank_file[1]-1);
     }
 }
