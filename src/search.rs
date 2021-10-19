@@ -94,7 +94,7 @@ pub fn count_leaves_in_tree(root : &Node, num_leaves : &mut u32, num_checks : &m
 
     let num_child_nodes = root.children.len();
 
-    if (root.position.is_check()) {
+    if root.position.is_check() {
         *num_checks = *num_checks + 1;
     }
 

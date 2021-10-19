@@ -3,8 +3,11 @@ use crate::utils::log;
 use crate::pieces::{ChessMove, MoveType, is_square_attacked, pieces_attacking_square, king_standard_moves};
 use crate::rules::{possible_moves_from_square};
 
+use std::collections::LinkedList;
+// use rust_gdb_example::*;
+
 /// The Chess Board. Stores the position of the chess pieces.
-#[derive(Clone, Copy)]
+#[derive(Clone, Debug)]
 pub struct Board {
     squares : [char; 64],
     is_white_to_move : bool,
@@ -13,6 +16,7 @@ pub struct Board {
     castle_king_side_black_avaliable : bool,
     castle_queen_side_white_avaliable : bool,
     castle_queen_side_black_avaliable : bool,
+    board_history : BoardHistory,
 }
 
 impl Board {
@@ -27,6 +31,7 @@ impl Board {
             castle_king_side_black_avaliable: true,
             castle_queen_side_white_avaliable: true,
             castle_queen_side_black_avaliable: true,
+            board_history: BoardHistory::new(),
         };
 
         board.set_board_from_fen_string("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR");
@@ -36,11 +41,13 @@ impl Board {
     /// Sets the squares from a fen string
     /// See https://en.wikipedia.org/wiki/Forsyth%E2%80%93Edwards_Notation
     pub fn set_board_from_fen_string(&mut self, fen_string: &str) {
+        self.clear_history();
         self.squares = ['-'; 64];
 
         let mut rank = 8 as usize;
         let mut file = 1 as usize;
         let mut finished_piece_positions = false;
+        let mut finished_castle_availability = false;
         for ch in fen_string.chars() {
 
             if !finished_piece_positions {
@@ -54,13 +61,35 @@ impl Board {
                     rank -= 1 as usize;
                     file = 1 as usize;
                 } else if ch == ' ' {
-                    // Piece positions have been set. 
-                    // TODO! Add section to deal with 
-                    // who is to move and castle avaliability
+                    // Piece positions have been set, and the
+                    // space indicates that castle availabilities 
+                    // have also been given, so disable castle rights
+                    // unless they have been set.
+                    self.castle_king_side_black_avaliable = false;
+                    self.castle_king_side_white_avaliable = false;
+                    self.castle_queen_side_black_avaliable = false;
+                    self.castle_queen_side_white_avaliable = false;
                     finished_piece_positions = true;
                 }
-            }
+            } else if !finished_castle_availability {
+                if ch == 'K' {
+                    self.castle_king_side_white_avaliable = true;
+                } else if ch == 'Q' {
+                    self.castle_queen_side_white_avaliable = true;
+                } else if ch == 'k' {
+                    self.castle_king_side_black_avaliable = true;
+                } else if ch == 'q' {
+                    self.castle_queen_side_black_avaliable = true;
+                } else if ch == ' ' {
+                    // TODO! implement the enpassant square. Involves 
+                    // reading two characters, so a bit different from 
+                    // the other parts of the fen string.
+                    finished_castle_availability = true;
+                }
+            }            
         }
+
+        self.board_history.add_position(self.clone());
     }
 
     pub fn is_castle_king_side_avaliable(&self, is_white: bool) -> bool {
@@ -101,6 +130,29 @@ impl Board {
             }
         }
         return current_position;
+    }
+
+    /// Checks if this board's current position matches that board's.
+    pub fn matches(&self, that: &Board) -> bool {
+
+        for i in 0..64 {
+            if self.squares[i] != that.squares[i] {
+                return false;
+            }
+        }
+
+        if self.is_white_to_move != that.is_white_to_move ||
+           self.en_passant_sq[0] != that.en_passant_sq[0] ||
+           self.en_passant_sq[1] != that.en_passant_sq[1] ||
+           self.castle_king_side_white_avaliable != that.castle_king_side_white_avaliable ||
+           self.castle_king_side_black_avaliable != that.castle_king_side_black_avaliable ||
+           self.castle_queen_side_white_avaliable != that.castle_queen_side_white_avaliable ||
+           self.castle_queen_side_black_avaliable != that.castle_queen_side_black_avaliable {
+
+            return false;
+        }
+
+        return true;
     }
 
     pub fn is_check(&self) -> bool {
@@ -162,18 +214,17 @@ impl Board {
     pub fn is_draw(&self) -> bool {
 
         // Check for draw by three fold repetition
+        if self.board_history.has_threefold_repetition_occurred() {
+            return true;
+        }
 
 
         // Check for draw by stalemate
-        console_log!("is white to move = ");
         let occupied_squares = self.all_occupied_squares(self.is_white_to_move);
-        console_log!("num occupied squares = {}", occupied_squares.len());
         for occupied_square in occupied_squares {
-            console_log!("occupied square = {:?}", occupied_square);
 
             // If there are any moves in the current position, not a stalemate
             if possible_moves_from_square(&self, occupied_square).len() > 0 {
-                console_log!("There is at least one possible move");
                 return false;
             }
         }
@@ -294,6 +345,7 @@ impl Board {
         }
 
         self.is_white_to_move = !self.is_white_to_move;
+        self.board_history.add_position(self.clone());
     }
 
     /// Returns the piece on the squar, specified by the square index
@@ -392,6 +444,10 @@ impl Board {
         return occupied_squares;
     }
 
+    pub fn clear_history(&mut self) {
+        self.board_history.clear();
+    }
+
     /// Moves the piece from src to dest, and leaves the src square empty
     fn move_piece(&mut self, src: [usize ; 2], dest: [usize; 2]) {
         let dest_index = self.square_index(dest);
@@ -416,6 +472,7 @@ impl Board {
         self.castle_king_side_black_avaliable = true;
         self.castle_queen_side_white_avaliable = true;
         self.castle_queen_side_black_avaliable = true;
+        self.board_history.clear();
     }
 
     /// Convert the rank and file to the corresponding square index.
@@ -468,15 +525,46 @@ fn can_attack_be_intercepted(board : &Board, attacking_move : ChessMove) -> bool
     return false;
 }
 
-/// Tracks the moves played during a game. Used to find three fold repetition.
-struct MovesPlayed {
+/// Tracks all the positions that have occured in the game. 
+/// Used to find when draw by three fold repeition occurs.
+#[derive(Clone, Debug)]
+struct BoardHistory {
+    past_positions : LinkedList<Board>,
+}
 
+impl BoardHistory {
+    pub fn new() -> BoardHistory {
+        return BoardHistory {
+            past_positions: LinkedList::new(),
+        };
+    }
+
+    pub fn clear(&mut self) {
+        self.past_positions.clear();
+    }
+
+    pub fn has_threefold_repetition_occurred(&self) -> bool {
+        if self.past_positions.len() < 3 {
+            return false;
+        }
+        let current_position = self.past_positions.back().unwrap();
+        let num_repetitions = self.past_positions.iter()
+            .filter(|&position| position.matches(&current_position)).count();
+
+        return num_repetitions >= 3;
+    }
+
+    pub fn add_position(&mut self, mut board: Board) {
+        board.clear_history();
+        self.past_positions.push_back(board);
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::console_log;
     use crate::board::Board;
+    use crate::pieces::ChessMove;
 
     #[test]
     fn is_checkmate_test() {
@@ -520,5 +608,102 @@ mod tests {
 
         board.set_board_from_fen_string("8/8/p7/P7/5kq1/8/8/7K");
         assert!( !board.is_draw() );
+    }
+
+    #[test]
+    fn is_draw_by_repetition_1() {
+        let mut board = Board::new();
+        board.render();
+        assert!( !board.is_draw() );
+        board.set_board_from_fen_string("5rk1/5pbp/6p1/8/8/6P1/5PBP/5RK1 ");
+        eprintln!("is caslte king side avaliable for white = {}", board.is_castle_king_side_avaliable(true));
+        board.render();
+        assert!( !board.is_draw() );
+
+        let white_move_1 = ChessMove::new(&board, [1, 6], [1, 5]);
+        let black_move_1 = ChessMove::new(&board, [8, 6], [8, 5]);
+
+        board.make_move(white_move_1);
+        eprintln!("is caslte king side avaliable for white = {}", board.is_castle_king_side_avaliable(true));
+        board.render();
+        assert!(!board.is_draw());
+        board.make_move(black_move_1);
+        board.render();
+        assert!(!board.is_draw());
+        
+        let white_move_2 = ChessMove::new(&board, [1, 5], [1, 6]);
+        let black_move_2 = ChessMove::new(&board, [8, 5], [8, 6]);
+
+        board.make_move(white_move_2);
+        board.render();
+        assert!(!board.is_draw());
+        board.make_move(black_move_2);
+        board.render();
+        assert!(!board.is_draw());
+
+        board.make_move(white_move_1);
+        board.render();     
+        assert!(!board.is_draw());
+        board.make_move(black_move_1);
+        board.render();
+        assert!(!board.is_draw());
+
+        board.make_move(white_move_2);
+        board.render();
+        assert!(!board.is_draw());
+        board.make_move(black_move_2);
+        board.render();
+
+        // Threefold repetition of the starting position
+        assert!(board.is_draw());
+    }
+
+    #[test]
+    fn is_draw_by_repetition_2() {
+        let mut board = Board::new();
+        board.render();
+        assert!( !board.is_draw() );
+
+        let white_move_1 = ChessMove::new(&board, [2, 5], [3, 5]);
+        let black_move_1 = ChessMove::new(&board, [7, 5], [6, 5]);
+
+        board.make_move(white_move_1);
+        board.make_move(black_move_1);
+        board.render();
+        assert!(!board.is_draw());
+        
+        let white_move_2 = ChessMove::new(&board, [1, 5], [2, 5]);
+        let black_move_2 = ChessMove::new(&board, [8, 5], [7, 5]);
+
+        board.make_move(white_move_2);
+        board.make_move(black_move_2);
+        // First occurance of position that will cause a draw
+        board.render();
+        assert!(!board.is_draw());
+
+        let white_move_3 = ChessMove::new(&board, [2, 5], [1, 5]);
+        let black_move_3 = ChessMove::new(&board, [7, 5], [8, 5]);
+
+        board.make_move(white_move_3);
+        board.make_move(black_move_3);
+        board.render();
+        assert!( !board.is_draw() );
+
+        board.make_move(white_move_2);
+        board.make_move(black_move_2);
+        // Second occurance of position that will cause a draw
+        board.render();
+        assert!( !board.is_draw() );
+
+        board.make_move(white_move_3);
+        board.make_move(black_move_3);
+        board.render();
+        assert!( !board.is_draw() );
+
+        board.make_move(white_move_2);
+        board.make_move(black_move_2);
+        // Third occurance of repeated position. This is a draw.
+        board.render();
+        assert!( board.is_draw());
     }
 }
