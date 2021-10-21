@@ -147,12 +147,8 @@ function makeMove(srcCoords, destCoords, selectedPromotion) {
         // Update the board
         globalGameState.make_move(srcCoords, destCoords, selectedPromotion); // Add an extra parameter to deal with promotions
         updateBoard();
+        makeNextMove();
     }
-
-    if (globalGameState.is_computer_move()) {
-        makeComputerMove();
-    }
-
 }
 
 /// Checks if the move entered by a human player is a promotion...
@@ -171,7 +167,7 @@ function updateBoard() {
         openGameoverPopup("Checkmate!");
     } else if (globalGameState.is_draw()) {
         openGameoverPopup("Draw!");
-    } 
+    }
 }
 
 function isCaptureMove(htmlElement) {
@@ -376,15 +372,25 @@ function setPiece(pieceAsFenChar, rank, file) {
 
 }
 
+function makeNextMove() {
+    setTimeout(() => {
+        if (globalGameState.is_checkmate() || globalGameState.is_draw()) {
+            // game is over. no next move.
+            return;
+        }
+    
+        if (globalGameState.is_computer_move()) {
+            makeComputerMove();
+        }
+    }, 10);
+}
+
 function makeComputerMove() {
     console.log("js::getComputerMove: ");
 
     globalGameState.make_computer_move();
-    updateBoard();
-
-    if (globalGameState.is_computer_move()) {
-        makeComputerMove();
-    }
+    updateBoard()
+    makeNextMove();
 }
 
 /// Called on a button press when the user has selected the desired promotion.

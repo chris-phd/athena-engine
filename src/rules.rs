@@ -17,18 +17,18 @@ pub fn is_move_legal(board: &Board, requested_move: &ChessMove) -> bool {
         }
     }
 
-    if is_legal {
-        console_log!("    move IS legal");
-    } else {
-        console_log!("    move is NOT legal");
-    }
-
     return is_legal;
 }
 
 /// all_possible_moves: Returns all the possible moves from the current
 /// position.
 pub fn all_possible_moves(board : &Board) -> Vec<ChessMove> {
+
+    if board.is_checkmate() || board.is_draw() {
+        // No possible moves if the game is over
+        return vec![];
+    }
+
     let occupied_squares = board.all_occupied_squares(board.white_to_move());
 
     let mut all_possible_moves : Vec<ChessMove> = vec![];

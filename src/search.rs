@@ -173,13 +173,13 @@ mod tests {
         assert_eq!(num_checks, 0);
         assert_eq!(num_leaves, 400);
 
-        // root = Node::new(&board, &empty_move);
-        // create_search_tree(&mut root, 3);
-        // num_leaves = 0;
-        // num_checks = 0;
-        // count_leaves_in_tree(&root, &mut num_leaves, &mut num_checks);
-        // assert_eq!(num_checks, 12);
-        // assert_eq!(num_leaves, 8902); // failing, getting 9194 positions
+        root = Node::new(&board, &empty_move);
+        create_search_tree(&mut root, 3);
+        num_leaves = 0;
+        num_checks = 0;
+        count_leaves_in_tree(&root, &mut num_leaves, &mut num_checks);
+        assert_eq!(num_checks, 12);
+        assert_eq!(num_leaves, 8902); // failing, getting 9194 positions
 
         // root = Node::new(&board, &empty_move);
         // create_search_tree(&mut root, 4);
