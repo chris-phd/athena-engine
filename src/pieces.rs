@@ -447,11 +447,13 @@ pub fn is_square_attacked(board : &Board, rank_file : [usize; 2], is_attacked_by
 pub fn pieces_attacking_square(board : &Board, rank_file : [usize; 2], is_attacked_by_white : bool) -> Vec<ChessMove> {
 
     // Order of the pieces in the move_functions vector must match the order
-    // in the piece types vector
+    // in the piece types vector.
+    // We do not need to check queen moves explicitly, because they will be checked
+    // by the bishop and rook moves.
     let move_functions : Vec<&dyn Fn(&Board, [usize; 2], bool) -> Vec<ChessMove>> = 
-        vec![&queen_moves, &bishop_moves, &knight_moves, &rook_moves, &pawn_capture_moves, 
+        vec![&bishop_moves, &knight_moves, &rook_moves, &pawn_capture_moves, 
         &king_moves_move_into_check_allowed];
-    let piece_types = vec!['Q', 'B', 'N', 'R', 'P', 'K'];
+    let piece_types = vec!['B', 'N', 'R', 'P', 'K'];
 
     let mut attacking_squares : Vec<ChessMove> = vec![]; 
     for i in 0..piece_types.len() {
@@ -467,15 +469,12 @@ pub fn pieces_attacking_square(board : &Board, rank_file : [usize; 2], is_attack
 
             let piece_on_attacking_square = board.get_piece_on_square(attacking_square);
             let piece_type = piece_on_attacking_square.to_ascii_uppercase();
-            if piece_type == piece_types[i] {
+            if piece_type == piece_types[i] ||
+               (piece_type == 'Q' && (piece_types[i] == 'B' || piece_types[i] == 'R')) {
                 let mut attacking_move = piece_move;
                 attacking_move.dest = piece_move.src;
                 attacking_move.src = piece_move.dest;
-                if is_attacked_by_white {
-                    attacking_move.piece = piece_type;
-                } else {
-                    attacking_move.piece = piece_type.to_ascii_lowercase();
-                }
+                attacking_move.piece = piece_on_attacking_square;
                 attacking_squares.push(attacking_move);
             }
         }
