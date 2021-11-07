@@ -1,4 +1,6 @@
-- draws by threefold repetition
+- computer does not know how to promote
 - implement draw if 50 moves pass without a piece being captured
-- implement draw if there is not enough material for both sides to checkmate (kings only)
+- implement draw if there is not enoughmaterial for both sides to checkmate (kings only)
+- alpha beta trimming
+- perf optimisations
 - remove circular dependencies between board, pieces and rules submodules
