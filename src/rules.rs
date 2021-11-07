@@ -58,21 +58,17 @@ pub fn possible_moves_from_square(board: &Board, rank_file: [usize; 2]) -> Vec<C
         _ => panic!(),
     }
 
-    // If the king is in check, cull any moves that don't take the king out of check
-    if board.is_check() {
-        let mut moves_without_check : Vec<ChessMove> = vec![];
-        for chess_move in moves {
-            let mut board_after_move = board.clone();
-            board_after_move.make_move(chess_move);
-            board_after_move.set_is_white_to_move(board.white_to_move());
-            if !board_after_move.is_check() {
-                moves_without_check.push(chess_move);
-            }
+    // Cull any moves that end in the king in check
+    let mut moves_without_check : Vec<ChessMove> = vec![];
+    for chess_move in moves {
+        let mut board_after_move = board.clone();
+        board_after_move.make_move(chess_move);
+        board_after_move.set_is_white_to_move(board.white_to_move());
+        if !board_after_move.is_check() {
+            moves_without_check.push(chess_move);
         }
-        return moves_without_check;
     }
-
-    return moves;
+    return moves_without_check;
 } 
 
 /// Tests to see that the rules are working
@@ -80,7 +76,7 @@ pub fn possible_moves_from_square(board: &Board, rank_file: [usize; 2]) -> Vec<C
 mod tests {
     use crate::pieces::ChessMove;
     use crate::board::Board;
-    use crate::rules::{all_possible_moves, possible_moves_from_square};
+    use crate::rules::{is_move_legal, all_possible_moves, possible_moves_from_square};
 
     #[test]
     fn remove_king_from_check() {
@@ -88,5 +84,16 @@ mod tests {
         board.set_board_from_fen_string("8/k7/8/3q1N2/8/8/2P1P3/3K4");
         
         assert_eq!(all_possible_moves(&board).len(), 3);
+    }
+
+    #[test]
+    fn move_piece_pinned_to_king() {
+        let mut board = Board::new();
+        board.set_board_from_fen_string("rnbqk1nr/pppp1ppp/4p3/8/1b1P4/2N5/PPP1PPPP/R1BQKBNR");
+        let illegal_move = ChessMove::new(&board, [3, 3], [5, 2]);
+        let legal_move = ChessMove::new(&board, [1, 3], [2, 4]);
+
+        assert!( !is_move_legal(&board, &illegal_move) );
+        assert!( is_move_legal(&board, &legal_move) )
     }
 }
