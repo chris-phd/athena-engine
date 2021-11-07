@@ -1,5 +1,5 @@
 use crate::board::Board;
-use crate::evaluate::evaluate;
+use crate::evaluate::{evaluate, CHECKMATE_VAL};
 use crate::rules::all_possible_moves;
 use crate::pieces::ChessMove;
 
@@ -12,8 +12,6 @@ pub fn create_search_tree(mut root : &mut Node, depth : usize) {
     // Recursive function break condition. 
     // The search depth has been reached.
     if depth == 0 {
-        root.evaluation = evaluate(&root.position);
-        root.is_evaluated = true;
         return;
     }
 
@@ -30,43 +28,80 @@ pub fn create_search_tree(mut root : &mut Node, depth : usize) {
 
         create_search_tree( root.children.last_mut().unwrap(), new_depth );
     }
+}
 
-    // There are no possible moves from the current position. 
-    root.evaluation = evaluate(&root.position);
-    root.is_evaluated = true;
+pub fn minimax(mut root : &mut Node) {
+    let num_child_nodes = root.children.len();
+
+    // Break condition. This is a leaf, so create a static evaluation
+    if num_child_nodes == 0 {
+        root.static_eval = evaluate(&root.position);
+        root.minimax_eval = root.static_eval;
+        root.is_evaluated = true;
+        return;
+    }
+
+    let is_white_to_move = root.position.white_to_move();
+    let mut minimax_eval : f32;
+    if is_white_to_move {
+        minimax_eval = -CHECKMATE_VAL;
+    } else {
+        minimax_eval = CHECKMATE_VAL;
+    }
+
+    for i in 0..num_child_nodes {
+        
+        minimax(&mut root.children[i]);
+
+        let eval = root.children[i].minimax_eval;
+        if is_white_to_move && eval > minimax_eval  ||
+           !is_white_to_move && eval < minimax_eval {
+
+            minimax_eval = root.children[i].minimax_eval;
+        }
+    }
+
+    root.minimax_eval = minimax_eval;
 }
 
 /// Returns the move that leads toward the position with the best evaluation
 /// for the selected colour. 
+/// Alpha and beta are used for alpha-beta-pruning. Set alpha to -CHECKMATE_VAL
+/// and beta to +CHECKMATE_VAL on the first call.
 pub fn find_best_move(root : &Node, best_for_white : bool) -> ChessMove {
 
-    assert!(root.children.len() > 0 );
+    assert!(root.children.len() > 0);
 
-    let mut best_eval : f32  = 0.0;
     let mut best_eval_inx : usize = 0;
+    let mut best_minimax_eval : f32;
+    if best_for_white {
+        best_minimax_eval = -CHECKMATE_VAL;
+    } else {
+        best_minimax_eval = CHECKMATE_VAL;
+    }
+
     let num_possible_moves = root.children.len();
     for i in 0..num_possible_moves {
 
-        if num_possible_moves == 1 {
-            break;
-        }
-
-        let mut eval : f32 = 0.0;
-        basic_depth_first_search(&root.children[i], best_for_white, &mut eval);
-
-        if ( best_for_white && eval > best_eval ) || 
-           ( !best_for_white && eval < best_eval ){
-            best_eval = eval;
+        let eval = root.children[i].minimax_eval;
+        if ( best_for_white && eval > best_minimax_eval ) || 
+           ( !best_for_white && eval < best_minimax_eval ){
+            best_minimax_eval = eval;
             best_eval_inx = i;
         }
     }
 
-    let best_move = root.children[best_eval_inx].chess_move_from_parent.clone();
-    return best_move;
+    return root.children[best_eval_inx].chess_move_from_parent.clone();
 }
 
-fn basic_depth_first_search(root : &Node, best_for_white : bool, mut best_eval : &mut f32) {
+/// Searches a tree for the best move using alpha-beta pruning.
+fn basic_depth_first_search(root : &Node, best_for_white : bool, mut best_eval : &mut f32, 
+                            mut alpha : &mut f32, mut beta : &mut f32) {
     let num_child_nodes = root.children.len();
+
+    // Currently working on implementing the minimax algorthm correctly
+    // so that the engine doesn't assume the opponent is going to make bad moves.
+    // Also in the process of implementing alpha-beta pruning. =
 
     // break condition, this is a leaf node 
     if num_child_nodes == 0 {
@@ -75,16 +110,16 @@ fn basic_depth_first_search(root : &Node, best_for_white : bool, mut best_eval :
             assert!(false);
         }
         
-        if best_for_white && root.evaluation > *best_eval {
-            *best_eval = root.evaluation;
-        } else if !best_for_white && root.evaluation < *best_eval {
-            *best_eval = root.evaluation;
+        if best_for_white && root.static_eval > *best_eval {
+            *best_eval = root.static_eval;
+        } else if !best_for_white && root.static_eval < *best_eval {
+            *best_eval = root.static_eval;
         } 
         return;
     }
 
     for i in 0..num_child_nodes {
-        basic_depth_first_search(&root.children[i], best_for_white, &mut best_eval);
+        basic_depth_first_search(&root.children[i], best_for_white, &mut best_eval, &mut alpha, &mut beta);
     }
 
     return;
@@ -117,7 +152,8 @@ pub struct Node {
     pub chess_move_from_parent: ChessMove,
     pub position: Board,
     pub is_evaluated: bool, 
-    pub evaluation: f32,
+    pub static_eval: f32,
+    pub minimax_eval: f32,
 }
 
 impl Node {
@@ -127,7 +163,8 @@ impl Node {
             chess_move_from_parent : chess_move.clone(),
             position : board.clone(),
             is_evaluated : false,
-            evaluation : 0.0,
+            static_eval : 0.0,
+            minimax_eval : 0.0,
         }
     }
 

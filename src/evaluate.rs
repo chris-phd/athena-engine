@@ -1,7 +1,7 @@
 use crate::board::Board;
 use crate::pieces;
 
-const CHECKMATE_VAL : f32 = 1000.0;
+pub const CHECKMATE_VAL : f32 = 1000.0;
 const CHECK_VAL : f32 = 0.5;
 const QUEEN_VAL : f32 = 9.0;
 const ROOK_VAL : f32 = 5.0;

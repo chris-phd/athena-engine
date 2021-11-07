@@ -1,9 +1,9 @@
-use crate::console_log;
-use crate::utils::{log, coord_to_rank_file};
 use crate::board::Board;
+use crate::console_log;
 use crate::pieces::ChessMove;
 use crate::rules::possible_moves_from_square;
-use crate::search::{Node, create_search_tree, find_best_move, count_leaves_in_tree};
+use crate::search::{Node, create_search_tree, minimax, find_best_move, count_leaves_in_tree};
+use crate::utils::{log, coord_to_rank_file};
 
 use crate::Math::random;
 
@@ -13,6 +13,7 @@ pub fn best_move(board: &Board, depth: usize) -> ChessMove {
     
     let mut root = Node::new_root(&board);
     create_search_tree(&mut root, depth);
+    minimax(&mut root);
     let chess_move = find_best_move(&root, board.white_to_move());
     
     console_log!("    selected move, src = {:?}, dest = {:?}", chess_move.src, chess_move.dest);
@@ -93,6 +94,10 @@ mod tests {
         let mut depth = 1 as usize;
         let mut selected_move = best_move(&board, depth);
         let known_best_move = ChessMove::new(&board, [1, 2], [5, 2]);
+        assert!(selected_move.is_the_same_as(&known_best_move));
+
+        depth = 2 as usize;
+        selected_move = best_move(&board, depth);
         assert!(selected_move.is_the_same_as(&known_best_move));
 
         depth = 3 as usize;

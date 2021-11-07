@@ -50,7 +50,6 @@ impl Player for HumanPlayer {
 impl Player for ComputerPlayer {
     fn make_move(&self, board: &Board) -> ChessMove {
         console_log!("players::ComputerPlayer::make_move: ");
-        // return engine::random_move(&board);
         let depth = 3;
         return engine::best_move(&board, depth);
     }
