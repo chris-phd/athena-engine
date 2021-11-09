@@ -1,4 +1,3 @@
-- computer does not know how to promote
 - implement draw if 50 moves pass without a piece being captured
 - implement draw if there is not enoughmaterial for both sides to checkmate (kings only)
 - alpha beta trimming

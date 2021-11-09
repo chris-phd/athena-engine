@@ -22,7 +22,7 @@ impl DeltaRankFile {
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum MoveType {
     Standard,
     CastleKingSide,
@@ -102,7 +102,8 @@ impl ChessMove {
         let is_same_squares = self.src == that.src && 
                             self.dest == that.dest;
         let is_same_piece = self.piece == that.piece;
-        return is_same_piece && is_same_squares;
+        let is_same_move_type = self.move_type == that.move_type;
+        return is_same_piece && is_same_squares && is_same_move_type;
     }
 
     pub fn is_white_piece(&self) -> bool {
@@ -118,8 +119,8 @@ pub fn pawn_moves(board: &Board, rank_file: [usize; 2], is_white: bool) -> Vec<C
 }
 
 /// Returns all possible pawn captures from a given square
-fn pawn_capture_moves(board: &Board, rank_file: [usize; 2], is_white: bool) -> Vec<ChessMove> {
-    let mut non_capture_moves : Vec<ChessMove> = vec![];
+fn pawn_capture_moves(board: &Board, src_rank_file: [usize; 2], is_white: bool) -> Vec<ChessMove> {
+    let mut capture_moves : Vec<ChessMove> = vec![];
 
     let capture_movements;
     if is_white {
@@ -135,18 +136,29 @@ fn pawn_capture_moves(board: &Board, rank_file: [usize; 2], is_white: bool) -> V
     }
 
     for capture_movement in capture_movements {
-        let dest_rank_file = capture_movement.dest_from_src(rank_file);
+        let dest_rank_file = capture_movement.dest_from_src(src_rank_file);
         if board.is_valid_rank_file(dest_rank_file) &&
            (is_capture(&board, dest_rank_file, is_white) || 
             (dest_rank_file[0] == board.get_en_passant_square()[0] && 
             dest_rank_file[1] == board.get_en_passant_square()[1])) {
 
-            let possible_move = ChessMove::new(&board, rank_file, dest_rank_file);
-            non_capture_moves.push(possible_move);
+            // Is this move a promotion?
+            if ( is_white && dest_rank_file[0] == 8 ) ||
+               ( !is_white && dest_rank_file[0] == 1 ) {
+ 
+                let mut promotions = vec![ChessMove::new_promotion(&board, src_rank_file, dest_rank_file, 1),
+                                          ChessMove::new_promotion(&board, src_rank_file, dest_rank_file, 2),
+                                          ChessMove::new_promotion(&board, src_rank_file, dest_rank_file, 3),
+                                          ChessMove::new_promotion(&board, src_rank_file, dest_rank_file, 4)];
+                capture_moves.append(&mut promotions);
+            } else {
+                let standard_move = ChessMove::new(&board, src_rank_file, dest_rank_file);
+                capture_moves.push(standard_move);
+            }
         }
     }
 
-    return non_capture_moves;
+    return capture_moves;
 }
 
 /// Returns all possible non capture pawn moves from a given square. 
@@ -174,8 +186,20 @@ fn pawn_non_capture_moves(board: &Board, src_rank_file: [usize; 2], is_white: bo
             continue;
         }
         if is_slide_clear_for_non_capture(&board, src_rank_file, dest_rank_file, is_white, false) {
-            let possible_move = ChessMove::new(&board, src_rank_file, dest_rank_file);
-            non_capture_moves.push(possible_move);
+
+            // Is this move a promotion?
+            if ( is_white && dest_rank_file[0] == 8 ) ||
+               ( !is_white && dest_rank_file[0] == 1 ) {
+
+                let mut promotions = vec![ChessMove::new_promotion(&board, src_rank_file, dest_rank_file, 1),
+                                          ChessMove::new_promotion(&board, src_rank_file, dest_rank_file, 2),
+                                          ChessMove::new_promotion(&board, src_rank_file, dest_rank_file, 3),
+                                          ChessMove::new_promotion(&board, src_rank_file, dest_rank_file, 4)];
+                non_capture_moves.append(&mut promotions);
+            } else {
+                let standard_move = ChessMove::new(&board, src_rank_file, dest_rank_file);
+                non_capture_moves.push(standard_move);
+            }
         }
     }
 
@@ -521,10 +545,20 @@ mod tests {
         is_white = false;
         assert_eq!( pieces::pawn_moves(&board, src, is_white).len(), 0);
 
-
         src = [7 as usize, 8 as usize];
         is_white = false;
         assert_eq!( pieces::pawn_moves(&board, src, is_white).len(), 2);
+
+        // Test promotions
+        board.set_board_from_fen_string("7k/2P5/8/8/8/8/8/K7");
+        src = [7 as usize, 3 as usize];
+        is_white = true;
+        assert_eq!( pieces::pawn_moves(&board, src, is_white).len(), 4 );
+
+        board.set_board_from_fen_string("3q3k/2P5/8/8/8/8/8/K7");
+        src = [7 as usize, 3 as usize];
+        is_white = true;
+        assert_eq!( pieces::pawn_moves(&board, src, is_white).len(), 8 );
     }
 
     #[test]

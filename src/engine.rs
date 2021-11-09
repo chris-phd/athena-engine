@@ -105,4 +105,24 @@ mod tests {
         assert!(selected_move.is_the_same_as(&known_best_move));
     }
 
+    #[test]
+    fn promote_to_queen() {
+        let mut board = Board::new();
+        board.set_board_from_fen_string("7k/2P5/8/8/8/8/8/K7");
+        board.render();
+
+        let mut depth = 2 as usize;
+        let mut selected_move = best_move(&board, depth);
+        let promote_queen = 1;
+        let mut known_best_move = ChessMove::new_promotion(&board, [7, 3], [8, 3], promote_queen);
+        assert!( selected_move.is_the_same_as(&known_best_move) );
+
+        board.set_board_from_fen_string("3q3k/2P5/8/8/8/8/8/K7");
+        board.render();
+        selected_move = best_move(&board, depth);
+        known_best_move = ChessMove::new_promotion(&board, [7, 3], [8, 4], promote_queen);
+        assert!( selected_move.is_the_same_as(&known_best_move) );
+
+
+    }
 }
