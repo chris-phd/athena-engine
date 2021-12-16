@@ -1,8 +1,9 @@
 use crate::board::Board;
 use crate::console_log;
+use crate::evaluate::CHECKMATE_VAL;
 use crate::pieces::ChessMove;
 use crate::rules::possible_moves_from_square;
-use crate::search::{Node, create_search_tree, minimax, find_best_move, count_leaves_in_tree};
+use crate::search::{Node, alpha_beta_minimax, find_best_move, count_leaves_in_tree};
 use crate::utils::{log, coord_to_rank_file};
 
 use crate::Math::random;
@@ -11,10 +12,15 @@ use crate::Math::random;
 pub fn best_move(board: &Board, depth: usize) -> ChessMove {
     console_log!("engine::best_move: ");
     
+    // Create, evaluate and prune the search tree
     let mut root = Node::new_root(&board);
-    create_search_tree(&mut root, depth);
-    minimax(&mut root);
-    let chess_move = find_best_move(&root, board.white_to_move());
+    let alpha = -CHECKMATE_VAL;
+    let beta = CHECKMATE_VAL;
+    let maximizing_player = board.white_to_move();
+    alpha_beta_minimax(&mut root, depth, alpha, beta, maximizing_player);
+
+    // Return the move that gives the best evaluation
+    let chess_move = find_best_move(&root);
     
     console_log!("    selected move, src = {:?}, dest = {:?}", chess_move.src, chess_move.dest);
     
@@ -103,6 +109,10 @@ mod tests {
         depth = 3 as usize;
         selected_move = best_move(&board, depth);
         assert!(selected_move.is_the_same_as(&known_best_move));
+
+        depth = 4 as usize;
+        selected_move = best_move(&board, depth);
+        assert!(selected_move.is_the_same_as(&known_best_move));
     }
 
     #[test]
@@ -111,7 +121,7 @@ mod tests {
         board.set_board_from_fen_string("7k/2P5/8/8/8/8/8/K7");
         board.render();
 
-        let mut depth = 2 as usize;
+        let mut depth = 3 as usize;
         let mut selected_move = best_move(&board, depth);
         let promote_queen = 1;
         let mut known_best_move = ChessMove::new_promotion(&board, [7, 3], [8, 3], promote_queen);

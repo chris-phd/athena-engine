@@ -7,10 +7,10 @@ extern "C" {
 }
 
 /// A javascript console.log macro
-// #[macro_export]
-// macro_rules! console_log {
-//     ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
-// }
+//#[macro_export]
+//macro_rules! console_log {
+//    ($($t:tt)*) => (log(&format_args!($($t)*).to_string()))
+//}
 
 /// use this console_log when running tests
 #[macro_export]

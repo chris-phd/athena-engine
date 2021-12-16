@@ -16,6 +16,8 @@ pub struct Board {
     castle_king_side_black_avaliable : bool,
     castle_queen_side_white_avaliable : bool,
     castle_queen_side_black_avaliable : bool,
+    white_king_rank_file : [usize; 2],
+    black_king_rank_file : [usize; 2],
     board_history : BoardHistory,
 }
 
@@ -31,6 +33,8 @@ impl Board {
             castle_king_side_black_avaliable: true,
             castle_queen_side_white_avaliable: true,
             castle_queen_side_black_avaliable: true,
+            white_king_rank_file: [1, 5],
+            black_king_rank_file: [8, 5],
             board_history: BoardHistory::new(),
         };
 
@@ -341,7 +345,7 @@ impl Board {
                     promoted_piece = 'n';
                 }
                 self.squares[self.square_index(chess_move.dest)] = promoted_piece;
-            }
+            },
         }
 
         self.is_white_to_move = !self.is_white_to_move;
@@ -405,18 +409,12 @@ impl Board {
     }
 
     pub fn get_king_rank_file(&self) -> [usize; 2] {
-        for rank in (1 as usize)..9 {
-            for file in (1 as usize)..9 {
-                let piece = self.get_piece_on_square([rank, file]);
-                if ( self.is_white_to_move && piece == 'K' )  ||
-                   (!self.is_white_to_move && piece == 'k') {
-                    return [rank, file];
-                }
-            }
-        }
 
-        // King not found. Return an invalid rank and file
-        return [0, 0];
+        if self.is_white_to_move {
+            return self.white_king_rank_file;
+        } 
+
+        return self.black_king_rank_file;
     }
 
     pub fn is_valid_rank_file(&self, rank_file: [usize; 2]) -> bool {
@@ -454,11 +452,23 @@ impl Board {
         let src_index = self.square_index(src);
         self.squares[dest_index] = self.squares[src_index];
         self.squares[src_index] = '-';
+
+        if self.squares[dest_index] == 'K' {
+            self.white_king_rank_file = dest;
+        } else if self.squares[dest_index] == 'k' {
+            self.black_king_rank_file = dest;
+        }
     }
 
     /// Sets the piece at the square. By convention, uppercase is white,
     /// lowercase is a black piece.
     fn set_piece(&mut self, piece: char, rank_file: [usize; 2]) {
+        if piece == 'K' {
+            self.white_king_rank_file = rank_file;
+        } else if piece == 'k' {
+            self.black_king_rank_file = rank_file;
+        }
+
         self.squares[self.square_index(rank_file)] = piece;
     }
 
@@ -530,6 +540,7 @@ fn can_attack_be_intercepted(board : &Board, attacking_move : ChessMove) -> bool
 #[derive(Clone, Debug)]
 struct BoardHistory {
     past_positions : LinkedList<Board>,
+
 }
 
 impl BoardHistory {

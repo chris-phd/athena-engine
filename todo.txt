@@ -1,5 +1,6 @@
-- implement draw if 50 moves pass without a piece being captured
-- implement draw if there is not enoughmaterial for both sides to checkmate (kings only)
-- alpha beta trimming
+
+- implement draw if there is not enough material for both sides to checkmate (kings only)
 - perf optimisations
 - remove circular dependencies between board, pieces and rules submodules
+
+- implement draw if 50 moves pass without a piece being captured
