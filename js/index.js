@@ -64,7 +64,9 @@ function resetBoard() {
     console.log(chessPosition);
 
     var fenString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
-    if (chessPosition == "Test Queen") {
+    if (chessPosition == "Mid Game") {
+        fenString = "r2q1rk1/1b2ppb1/1p4pp/p1nnN3/P2N4/2P5/1PBB1PPP/R2QR1K1 w KQkq - 0 1"
+    } else if (chessPosition == "Test Queen") {
         fenString = "8/6R1/3n4/8/1r1Q4/8/4p1P1/K1k5 w KQkq - 0 1";
     } else if (chessPosition == "Test Checkmate") {
         fenString = "6k1/5ppp/8/1R6/8/2K5/8/8 w KQkq - 0 1";
