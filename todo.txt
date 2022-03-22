@@ -1,4 +1,17 @@
+## Currently working on:
+- Make it possible for a human to play black and computer to play white.
+- Fix castling!
 
+
+## Deployment
+- app not deploying succesfully on digital ocean. Maybe try using the bitnami image, since that launched on it's own?
+
+## Bugs
+- possible bug / regression. Can't castle on white side.
+
+## Featyres 
+- .
+- add opening book to improve game openings
 - implement draw if there is not enough material for both sides to checkmate (kings only)
 - perf optimisations
 - remove circular dependencies between board, pieces and rules submodules

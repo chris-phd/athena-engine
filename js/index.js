@@ -1,5 +1,6 @@
 let lib = null;
 let globalGameState = null;
+let isBoardFlipped = false;
 let pawnPromotionSrc = "--";
 let pawnPromotionDest = "--";
 
@@ -49,6 +50,7 @@ function resetBoard() {
     console.log("resetBoard");
 
     globalGameState.reset_board();
+    isBoardFlipped = false;
 
     var whitePlayerElement = document.getElementById("white-player-type");
     var blackPlayerElement = document.getElementById("black-player-type");
@@ -104,7 +106,6 @@ function onDragOver(event) {
 }
 
 function onDrop(event) {
-    console.log("js::onDrop: todo!")
     event.preventDefault();
     var id = event.dataTransfer.getData("text/html");
 
@@ -128,6 +129,11 @@ function onDrop(event) {
     // Grab the rank and file from the src and destination squares
     var srcSquareCoords = srcSquare.id;
     var destSquareCoords = destSquare.id;
+
+    if (isBoardFlipped) {
+        srcSquareCoords = flipCoords(srcSquareCoords);
+        destSquareCoords = flipCoords(destSquareCoords);
+    }
 
     if (!isPawnPromotion(id, destSquareCoords)) {
         makeMove(srcSquareCoords, destSquareCoords, 0);
@@ -259,9 +265,19 @@ function setBoardFromArrayOfEnums(boardPosition) {
 
     clearBoard();
 
+    if (!globalGameState.is_computer_move()) {
+        isBoardFlipped = !globalGameState.is_white_to_move();
+    }
+
     for (var i = 0; i < 64; ++i) {
         var rank = Math.floor((64 - (i+1))/8) + 1; 
         var file = i%8 + 1;
+
+        if (isBoardFlipped) {
+            rank = 8 - rank + 1;
+            file = 8 - file + 1;
+        }
+
         switch (boardPosition[i]) {
             case 1:
                 setPiece('p', rank, file);
@@ -454,7 +470,20 @@ function squareFromRankAndFile(rank, file) {
     return files[file-1].concat(ranks[rank-1]);
 }
 
-function isDigit(c) {
+/// flipCoords turns a1 into h8, b3 into g6, etc.
+function flipCoords(coords) {
+    if (coords.length != 2) {
+        console.log("js::flipCoords: invalid coordinate");
+        return "--";
+    }
+    let fileAlpha = coords[0];
+    let rankDigit = coords[1]; 
+    let flippedFile = 9 - (fileAlpha.charCodeAt(0) - 'a'.charCodeAt(0) + 1);
+    let flippedRank = 9 - (rankDigit.charCodeAt(0) - '0'.charCodeAt(0));
+    return squareFromRankAndFile(flippedRank, flippedFile);
+}
+
+function isDigit(c) {   
     return c >= '0' && c <= '9';
 }
 

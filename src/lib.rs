@@ -145,4 +145,8 @@ impl GameState {
             self.black_player = Box::new(ComputerPlayer::new());
         }
     }
+
+    pub fn is_white_to_move(&self) -> bool {
+        return self.board.white_to_move();
+    }
 }
