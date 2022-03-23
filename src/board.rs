@@ -51,6 +51,7 @@ impl Board {
         let mut rank = 8 as usize;
         let mut file = 1 as usize;
         let mut finished_piece_positions = false;
+        let mut finished_white_to_move = false;
         let mut finished_castle_availability = false;
         for ch in fen_string.chars() {
 
@@ -75,7 +76,15 @@ impl Board {
                     self.castle_queen_side_white_avaliable = false;
                     finished_piece_positions = true;
                 }
-            } else if !finished_castle_availability {
+            } else if !finished_white_to_move {
+                if ch=='w' {
+                    self.is_white_to_move = true;
+                } else if ch == 'b' {
+                    self.is_white_to_move = false;
+                } else if ch == ' ' {
+                    finished_white_to_move = true;
+                }
+            }else if !finished_castle_availability {
                 if ch == 'K' {
                     self.castle_king_side_white_avaliable = true;
                 } else if ch == 'Q' {

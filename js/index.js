@@ -60,11 +60,6 @@ function resetBoard() {
     var blackPlayer = blackPlayerElement.options[blackPlayerElement.selectedIndex].value;
     var chessPosition = chessPositionElement.options[chessPositionElement.selectedIndex].value;
 
-    console.log("selected options:");
-    console.log(whitePlayer);
-    console.log(blackPlayer);
-    console.log(chessPosition);
-
     var fenString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     if (chessPosition == "Mid Game") {
         fenString = "r2q1rk1/1b2ppb1/1p4pp/p1nnN3/P2N4/2P5/1PBB1PPP/R2QR1K1 w KQkq - 0 1"
@@ -261,7 +256,6 @@ function setBoardFromArrayOfEnums(boardPosition) {
     // 0 = empty squares, odd num = black, even num = white
     // 1, 2 = pawn. 3, 4 = knight. 5, 6 = bishop, 7, 8 = rook, 
     // 9, 10 = queen. 11, 12 = king
-    console.log(boardPosition);
 
     clearBoard();
 
