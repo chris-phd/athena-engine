@@ -149,7 +149,7 @@ fn min(a : f32, b : f32) -> f32 {
     return a;
 }
 
-/// // Each node in the search tree stores the position and
+/// Each node in the search tree stores the position and
 /// the leaves of the tree will have an evaluation.
 pub struct Node {
     pub children: Vec<Node>,

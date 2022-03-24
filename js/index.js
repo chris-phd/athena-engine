@@ -60,6 +60,21 @@ function resetBoard() {
     var blackPlayer = blackPlayerElement.options[blackPlayerElement.selectedIndex].value;
     var chessPosition = chessPositionElement.options[chessPositionElement.selectedIndex].value;
 
+    // Send the player info to the rust engine...
+    // 0 = Human player
+    // 1 = Computer player 
+    let whitePlayerEnum = 0;
+    let blackPlayerEnum = 0;
+    if (whitePlayer == "Computer")
+        whitePlayerEnum = 1;
+    if (blackPlayer == "Computer")
+        blackPlayerEnum = 1;
+
+    if (whitePlayer == "Computer" && blackPlayer == "Human")
+        isBoardFlipped = true;
+
+    globalGameState.set_players(whitePlayerEnum, blackPlayerEnum);
+
     var fenString = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
     if (chessPosition == "Mid Game") {
         fenString = "r2q1rk1/1b2ppb1/1p4pp/p1nnN3/P2N4/2P5/1PBB1PPP/R2QR1K1 w KQkq - 0 1"
@@ -75,19 +90,8 @@ function resetBoard() {
     setBoardFromFenString(fenString);
     globalGameState.set_board(fenString);
 
-    // Send the player info to the rust engine...
-
-    // 0 = Human player
-    // 1 = Computer player 
-    let whitePlayerEnum = 0;
-    let blackPlayerEnum = 0;
     if (whitePlayer == "Computer")
-        whitePlayerEnum = 1;
-    if (blackPlayer == "Computer")
-        blackPlayerEnum = 1;
-
-    globalGameState.set_players(whitePlayerEnum, blackPlayerEnum);
-
+        makeNextMove();
 }
 
 // Piece event handlers
@@ -230,6 +234,10 @@ function setBoardFromFenString(fenString) {
 
     clearBoard();
 
+    if (!globalGameState.is_computer_move()) {
+        isBoardFlipped = !globalGameState.is_white_to_move();
+    }
+
     // Read the fen string and set the corresponding board position.
     // Begin setting the board in the top left square (a8)
     var rank = 8;
@@ -241,7 +249,10 @@ function setBoardFromFenString(fenString) {
             rank -= 1;
             file = 1;
         } else if (isAlpha(fenString[i])) {
-            setPiece(fenString[i], rank, file);
+            if (!isBoardFlipped)
+                setPiece(fenString[i], rank, file);
+            else
+                setPiece(fenString[i], 8 - rank + 1, 8 - file + 1);
             file += 1; 
         } else if (fenString[i] == ' ') {
             break;
