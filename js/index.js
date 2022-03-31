@@ -5,8 +5,7 @@ let pawnPromotionSrc = "--";
 let pawnPromotionDest = "--";
 
 async function main() {
-
-    console.log("Importing the rust wasm code");
+    // Import the rust wasm code
     lib = await import("../pkg/index.js").catch(console.error);
     globalGameState = lib.GameState.new();
 
@@ -17,8 +16,6 @@ main();
 
 // Webpage setup
 function setupPage() {
-    console.log("setupPage");
-
     // Setup the chess pieces
     setupChessBoardSquares();
 
@@ -28,8 +25,7 @@ function setupPage() {
 
     // Setup the user config GUI
     setupConfigGUI();
-
-    console.log("bottom of setup page");
+    updatePlayerClocks();
 }
 
 // Config GUI
@@ -89,6 +85,8 @@ function resetBoard() {
     }
     setBoardFromFenString(fenString);
     globalGameState.set_board(fenString);
+
+    updatePlayerClocks();
 
     if (whitePlayer == "Computer")
         makeNextMove();
@@ -269,6 +267,7 @@ function setBoardFromArrayOfEnums(boardPosition) {
     // 9, 10 = queen. 11, 12 = king
 
     clearBoard();
+    updatePlayerClocks();
 
     if (!globalGameState.is_computer_move()) {
         isBoardFlipped = !globalGameState.is_white_to_move();
@@ -459,6 +458,17 @@ function openGameoverPopup(message) {
 
 function togglePromotionPopup() {
     document.getElementById("pawn-promotion-popup").classList.toggle("active");
+}
+
+function updatePlayerClocks() {
+
+    if (globalGameState.is_white_to_move()) {
+        document.getElementById("white-move-indicator").style.display = "block";
+        document.getElementById("black-move-indicator").style.display = "none";
+    } else {
+        document.getElementById("white-move-indicator").style.display = "none";
+        document.getElementById("black-move-indicator").style.display = "block";
+    }
 }
 
 // Helpers

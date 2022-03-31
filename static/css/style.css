@@ -32,7 +32,12 @@ main {
     height: 72px;
 }
 
-/* Config sidebar */
+/* Timers */
+.clock {
+    border: 1px solid green;
+}
+
+/* Config */
 
 /* Checkmate popup */
 .popup .overlay {
