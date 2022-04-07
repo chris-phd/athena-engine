@@ -355,6 +355,10 @@ impl Board {
                 }
                 self.squares[self.square_index(chess_move.dest)] = promoted_piece;
             },
+            MoveType::Invalid => {
+                console_log!("Board::make_move: Invalid mode type");
+                panic!();
+            }
         }
 
         self.is_white_to_move = !self.is_white_to_move;

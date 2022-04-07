@@ -156,8 +156,8 @@ impl ChessMove {
                 let clarified_file = ( mut_move_notation.as_bytes()[0] - b'a' + 1) as usize;
                 self.dest = coord_to_rank_file(String::from_utf8(mut_move_notation.as_bytes()[n-2..n].to_vec()).unwrap().as_str());
                 
-                if (self.dest[0] == board.get_en_passant_square()[0] &&
-                    self.dest[1] == board.get_en_passant_square()[1]) {
+                if self.dest[0] == board.get_en_passant_square()[0] &&
+                   self.dest[1] == board.get_en_passant_square()[1] {
     
                     self.move_type = MoveType::EnPassant;
                 } else {
@@ -174,6 +174,7 @@ impl ChessMove {
 
             } else {
                 console_log!("  UNRECOGNISED PAWN MOVE = {:?}", pgn_notation);
+                self.move_type = MoveType::Invalid;
                 return;
             }
             
@@ -253,6 +254,7 @@ impl ChessMove {
 
         } else {
             console_log!("  UNRECOGNISED PGN NOTATION = {:?}", pgn_notation);
+            self.move_type = MoveType::Invalid;
         }
 
         console_log!("    MOVE: {:?}", pgn_notation);

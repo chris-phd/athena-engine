@@ -1,17 +1,21 @@
 ## Currently working on:
-- Make it possible for a human to play black and computer to play white.
-
+- add opening book to improve game openings
+  - https://www.hiarcs.com/chess-opening-book-free.html
+  - http://www.pgnmentor.com/files.html#openings
 
 ## Deployment
 - app not deploying succesfully on digital ocean. Maybe try using the bitnami image, since that launched on it's own?
 
 ## Bugs
+- perft not generating the correct number of legal moves after cetain depth. [maybe black tries to capture the king? who knows]
 
-## Featyres 
-- .
-- add opening book to improve game openings
-- implement draw if there is not enough material for both sides to checkmate (kings only)
+## Features
+- Improve aesthetics of the timer.
+- Make the timer functional. Set start time using the config menu
+
 - perf optimisations
-- remove circular dependencies between board, pieces and rules submodules
 
+- implement draw if there is not enough material for both sides to checkmate (kings only)
 - implement draw if 50 moves pass without a piece being captured
+
+- remove circular dependencies between board, pieces and rules submodules

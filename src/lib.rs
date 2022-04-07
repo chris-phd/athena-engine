@@ -3,6 +3,7 @@ use js_sys::Math;
 extern crate console_error_panic_hook;
 
 mod board;
+mod book;
 mod engine;
 mod evaluate;
 mod pieces;
