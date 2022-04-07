@@ -1,5 +1,5 @@
 use crate::console_log;
-use crate::utils::log;
+use crate::utils::{log, coord_to_rank_file};
 use crate::board::Board;
 
 /// DeltaRankFile. Defines one possible piece movement as a 
@@ -22,7 +22,7 @@ impl DeltaRankFile {
     }
 }
 
-#[derive(Clone, Copy, PartialEq)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum MoveType {
     Standard,
     CastleKingSide,
@@ -32,6 +32,7 @@ pub enum MoveType {
     PromoteToRook,
     PromoteToBishop,
     PromoteToKnight,
+    Invalid,
 }
 
 /// ChessMove, represents a move made by a player
@@ -95,6 +96,170 @@ impl ChessMove {
             dest[1] == board.get_en_passant_square()[1] {
             self.move_type = MoveType::EnPassant;
         }
+    }
+
+    pub fn set_move_from_pgn_notation(&mut self, board: &Board, pgn_notation: &String, white_to_move: bool) {
+        
+        if pgn_notation == "O-O" {
+            self.move_type = MoveType::CastleKingSide;
+            if white_to_move {
+                self.piece = 'K';
+                self.src = [1, 5];
+                self.dest = [1, 7];
+            } else {
+                self.piece = 'k';
+                self.src = [8, 5];
+                self.dest = [8, 7];
+            }
+        } else if pgn_notation == "O-O-O" {
+            self.move_type = MoveType::CastleQueenSide;
+            if white_to_move {
+                self.piece = 'K';
+                self.src = [1, 5];
+                self.dest = [1, 3];
+            } else {
+                self.piece = 'k';
+                self.src = [8, 5];
+                self.dest = [8, 3];
+            }
+        } else if (pgn_notation.as_bytes()[0] as char).is_ascii_lowercase() {
+            // Pawn Moves
+
+            // Ignore checks
+            let mut mut_move_notation = pgn_notation.clone();
+            if mut_move_notation.ends_with('+') {
+                mut_move_notation.pop();
+            }
+
+            if (pgn_notation.as_bytes()[1] as char).is_ascii_digit() {
+                // Normal pawn moves
+
+                self.move_type = MoveType::Standard;
+                self.dest = coord_to_rank_file(&pgn_notation[..2]);
+                if white_to_move {
+                    self.piece = 'P';
+                    self.src = [self.dest[0] - 1, self.dest[1]];
+                    if !board.is_occupied(self.src) {
+                        self.src[0] -= 1;
+                    }
+                } else {
+                    self.piece = 'p';
+                    self.src = [self.dest[0] + 1, self.dest[1]];
+                    if !board.is_occupied(self.src) {
+                        self.src[0] += 1;
+                    }
+                }
+            } else if (pgn_notation.as_bytes()[1] as char) == 'x' {
+                // Pawn capture moves
+
+                let n = mut_move_notation.len();
+                let clarified_file = ( mut_move_notation.as_bytes()[0] - b'a' + 1) as usize;
+                self.dest = coord_to_rank_file(String::from_utf8(mut_move_notation.as_bytes()[n-2..n].to_vec()).unwrap().as_str());
+                
+                if (self.dest[0] == board.get_en_passant_square()[0] &&
+                    self.dest[1] == board.get_en_passant_square()[1]) {
+    
+                    self.move_type = MoveType::EnPassant;
+                } else {
+                    self.move_type = MoveType::Standard;
+                }
+
+                if white_to_move {
+                    self.src = [self.dest[0] - 1, clarified_file];
+                    self.piece = 'P';
+                } else {
+                    self.src = [self.dest[0] + 1, clarified_file];
+                    self.piece = 'p';
+                }
+
+            } else {
+                console_log!("  UNRECOGNISED PAWN MOVE = {:?}", pgn_notation);
+                return;
+            }
+            
+            if pgn_notation.contains('=') {
+                // Promotions
+
+                let promotion = mut_move_notation.pop().unwrap();
+                if promotion == 'Q' {
+                    self.move_type = MoveType::PromoteToQueen;
+                } else if promotion == 'R' {
+                    self.move_type = MoveType::PromoteToRook;
+                } else if promotion == 'B' {
+                    self.move_type = MoveType::PromoteToBishop;
+                } else if promotion == 'N' {
+                    self.move_type = MoveType::PromoteToKnight;
+                }
+            }
+
+        } else if (pgn_notation.as_bytes()[0] as char).is_ascii_uppercase() {
+            // Knights, Bishops, Rooks, Kings, Queens
+
+            if white_to_move {
+                self.piece = pgn_notation.as_bytes()[0] as char;
+            } else {
+                self.piece = (pgn_notation.as_bytes()[0] as char).to_ascii_lowercase();
+            }
+
+            let mut mut_move_notation = pgn_notation.clone();
+
+            // Ignore checks
+            if mut_move_notation.ends_with('+') {
+                mut_move_notation.pop();
+            }
+            let mut n = mut_move_notation.len();
+            self.dest = coord_to_rank_file(String::from_utf8(mut_move_notation.as_bytes()[n-2..n].to_vec()).unwrap().as_str());
+
+            // Remove the destination coords and ignore capture mark
+            mut_move_notation.pop();
+            mut_move_notation.pop();
+            if mut_move_notation.ends_with('x') {
+                mut_move_notation.pop();
+            }
+
+            // Need to disambiguate white piece is being specified
+            let mut clarified_rank : usize = 0;
+            let mut clarified_file : usize = 0;
+            n = mut_move_notation.len();
+            if n == 2 && (mut_move_notation.as_bytes()[n-1] as char).is_ascii_digit() {
+                // disambiguate by rank
+                clarified_rank = ( mut_move_notation.as_bytes()[n-1] - b'0' ) as usize;
+            } else if n == 2 && (mut_move_notation.as_bytes()[n-1] as char).is_ascii_lowercase() {
+                // disambiguate by file
+                clarified_file = ( mut_move_notation.as_bytes()[n-1] - b'a' + 1) as usize;
+            } else if n == 3 {
+                // disambiguate by rank and file
+                clarified_rank = ( mut_move_notation.as_bytes()[n-1] - b'0' ) as usize;
+                clarified_file = ( mut_move_notation.as_bytes()[n-2] - b'a' + 1) as usize;
+            }
+
+            let attacking_moves = pieces_attacking_square(&board, self.dest, white_to_move);
+            for attacking_move in attacking_moves {
+                if attacking_move.piece == self.piece && (
+                    (clarified_file == 0 && clarified_rank == 0 ) ||
+                    (clarified_file == 0 && clarified_rank == attacking_move.src[0]) ||
+                    (clarified_rank == 0 && clarified_file == attacking_move.src[1]) ||
+                    (clarified_file == attacking_move.src[0] && clarified_rank == attacking_move.src[1])) {
+                    
+                    self.src = attacking_move.src;
+                    break;
+                }
+            }
+
+            if self.src[0] != 0 && self.src[1] != 0 {
+                // Otherwise src square was not found, move remains invalid
+                self.move_type = MoveType::Standard;
+            }
+
+        } else {
+            console_log!("  UNRECOGNISED PGN NOTATION = {:?}", pgn_notation);
+        }
+
+        console_log!("    MOVE: {:?}", pgn_notation);
+        console_log!("      piece: {}", self.piece);
+        console_log!("      src  : {:?}", self.src);
+        console_log!("      dest : {:?}", self.dest);
+        console_log!("      type : {:?}", self.move_type);
     }
 
     pub fn is_the_same_as(&self, that: &ChessMove) -> bool {
@@ -506,6 +671,11 @@ pub fn pieces_attacking_square(board : &Board, rank_file : [usize; 2], is_attack
 
     return attacking_squares;
 }
+
+//
+// Helper functions for parsing chess notation
+//
+
 
 #[cfg(test)]
 mod tests {
