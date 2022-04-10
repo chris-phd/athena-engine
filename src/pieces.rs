@@ -1,6 +1,7 @@
 use crate::console_log;
 use crate::utils::{log, coord_to_rank_file};
 use crate::board::Board;
+use crate::rules::is_move_legal;
 
 /// DeltaRankFile. Defines one possible piece movement as a 
 /// change in rank and file from the current square. 
@@ -240,8 +241,9 @@ impl ChessMove {
                     (clarified_file == 0 && clarified_rank == 0 ) ||
                     (clarified_file == 0 && clarified_rank == attacking_move.src[0]) ||
                     (clarified_rank == 0 && clarified_file == attacking_move.src[1]) ||
-                    (clarified_file == attacking_move.src[0] && clarified_rank == attacking_move.src[1])) {
-                    
+                    (clarified_file == attacking_move.src[0] && clarified_rank == attacking_move.src[1])) &&
+                    is_move_legal(&board, &attacking_move) {
+
                     self.src = attacking_move.src;
                     break;
                 }
@@ -257,11 +259,13 @@ impl ChessMove {
             self.move_type = MoveType::Invalid;
         }
 
-        console_log!("    MOVE: {:?}", pgn_notation);
-        console_log!("      piece: {}", self.piece);
-        console_log!("      src  : {:?}", self.src);
-        console_log!("      dest : {:?}", self.dest);
-        console_log!("      type : {:?}", self.move_type);
+        // board.render();
+        // console_log!("    MOVE: {:?}", pgn_notation);
+        // console_log!("      piece: {}", self.piece);
+        // console_log!("      src  : {:?}", self.src);
+        // console_log!("      dest : {:?}", self.dest);
+        // console_log!("      type : {:?}", self.move_type);
+        // console_log!("      legal: {}", is_move_legal(&board, &self));
     }
 
     pub fn is_the_same_as(&self, that: &ChessMove) -> bool {

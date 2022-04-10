@@ -5,7 +5,6 @@ use crate::board::Board;
 
 /// Checks if the requested move is legal based on the current position
 pub fn is_move_legal(board: &Board, requested_move: &ChessMove) -> bool {
-    console_log!("rules::is_move_legal: ");
     
     let possible_moves = possible_moves_from_square(board, requested_move.src);
 

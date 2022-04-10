@@ -32,7 +32,7 @@ pub fn read_opening_book(book_filepath: &str) -> Option<Node> {
         let mut node_this_depth = &mut root;
 
         // Do not want to read in the full game
-        let max_book_depth = 20;
+        let max_book_depth = 10;
         for i in 0..num_moves {
             let white_to_move = i%2 == 0;
             let pgn_notation = String::from(moves[i]);
@@ -83,7 +83,7 @@ mod tests {
 
     #[test]
     fn read_test_file() {
-        let path_1 = "/home/chris/test_games_1.txt";
+        let path_1 = "static/resources/test_games_1.pgn";
         if let Some(root) = read_opening_book(path_1) {
 
             let mut num_leaves : u32 = 0;
@@ -96,7 +96,7 @@ mod tests {
             assert!(false);
         }
 
-        let path_2 = "/home/chris/test_games_2.txt";
+        let path_2 = "static/resources/test_games_2.pgn";
         if let Some(root) = read_opening_book(path_2) {
 
             let mut num_leaves : u32 = 0;
@@ -110,15 +110,30 @@ mod tests {
         }
     }
 
-    // Relative path not working as expected..
-    // #[test]
-    // fn test_read_opening_book() {
-    //     let path_to_book = "../../../static/resources/Games.txt";
-    //     if let Some(root) = read_opening_book(path_to_book) {
+    #[test]
+    fn read_broken_games() {
+        let path_1 = "static/resources/test_games_3.pgn";
+        if let Some(root) = read_opening_book(path_1) {
 
-    //     } else {
-    //         console_log!("Failed to open {:?}", path_to_book);
-    //         assert!(false);
-    //     }
-    // }
+            let mut num_leaves : u32 = 0;
+            let mut num_checks : u32 = 0;
+            count_leaves_in_tree(&root, &mut num_leaves, &mut num_checks);
+
+            assert!(num_leaves == 1);
+        } else {
+            console_log!("Failed to open {:?}", path_1);
+            assert!(false);
+        }
+    }
+
+    #[test]
+    fn test_read_opening_book() {
+        let path_to_book = "static/resources/games.pgn";
+        if let Some(root) = read_opening_book(path_to_book) {
+
+        } else {
+            console_log!("Failed to open {:?}", path_to_book);
+            assert!(false);
+        }
+    }
 }
