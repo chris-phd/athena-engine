@@ -3,6 +3,8 @@ use crate::utils::log;
 use crate::board::Board;
 use crate::pieces::ChessMove;
 use crate::engine;
+use crate::search::Node;
+use crate::book::read_opening_book;
 
 /// HumanPlayer: Moves are entered via the web UI.
 pub struct HumanPlayer {
@@ -18,13 +20,27 @@ impl HumanPlayer {
 
 /// ComputerPlayer: Moves are calculated by the chess engine.
 pub struct ComputerPlayer {
-
+    opening_book: Node,
 }
 
 impl ComputerPlayer {
     pub fn new() -> ComputerPlayer {
         console_log!("ComputerPlayer::new:");
-        return ComputerPlayer {};
+        let max_depth: usize = 10;
+        let mut maybe_book = read_opening_book(max_depth);
+        return match maybe_book {
+            Some(book) => { 
+                console_log!("    Successfully read the opening book!");
+                ComputerPlayer {
+                opening_book: book,
+            }},
+            _=> { 
+                console_log!("    Failed to read the opening book!");
+                let board = Board::new();
+                ComputerPlayer {
+                opening_book: Node::new_root(&board),
+            }}
+        }
     }
 }
 

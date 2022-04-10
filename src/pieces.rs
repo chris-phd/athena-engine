@@ -258,14 +258,6 @@ impl ChessMove {
             console_log!("  UNRECOGNISED PGN NOTATION = {:?}", pgn_notation);
             self.move_type = MoveType::Invalid;
         }
-
-        // board.render();
-        // console_log!("    MOVE: {:?}", pgn_notation);
-        // console_log!("      piece: {}", self.piece);
-        // console_log!("      src  : {:?}", self.src);
-        // console_log!("      dest : {:?}", self.dest);
-        // console_log!("      type : {:?}", self.move_type);
-        // console_log!("      legal: {}", is_move_legal(&board, &self));
     }
 
     pub fn is_the_same_as(&self, that: &ChessMove) -> bool {
