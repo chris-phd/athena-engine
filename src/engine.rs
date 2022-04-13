@@ -7,6 +7,7 @@ use crate::search::{Node, alpha_beta_minimax, find_best_move, count_leaves_in_tr
 use crate::utils::{log, coord_to_rank_file};
 
 use crate::Math::random;
+use std::collections::LinkedList;
 
 /// Generates the best chess move from the current position.
 pub fn best_move(board: &Board, depth: usize) -> ChessMove {
@@ -56,6 +57,48 @@ pub fn random_move(board: &Board) -> ChessMove {
 
     return chess_move;
 }
+
+pub fn move_from_opening_book(root: &Node, board: &Board) -> Option<ChessMove> {
+
+    let mut nodes_to_visit: LinkedList<&Node> = LinkedList::new();
+    nodes_to_visit.push_back(&root);
+    while !nodes_to_visit.is_empty() {
+        let current_node = nodes_to_visit.pop_front().unwrap();
+        for child in &current_node.children {
+            nodes_to_visit.push_back(child);
+        }
+        if board.matches(&current_node.position) {
+            let num_children = current_node.children.len();
+            let rand_child = get_random_usize(num_children);
+            return Some(current_node.children[rand_child].chess_move_from_parent);
+        }
+    }
+
+    return None;
+}
+
+/// @todo! Need to use this to modify the root of the opening book. Shouldn't start
+/// from the base of the tree each time we begin searching. 
+// /// Uses non recursive BFS to find the start position in the search tree.
+// /// Modifies the root of the search tree to node with the target position.
+// fn find_position_in_book(root: &mut Node, target_board: &Board) -> &mut Node {
+
+//     {
+//         let nodes_to_visit: LinkedList<&Node> = LinkedList::new();
+//         nodes_to_visit.push_back(&root);
+//         while !nodes_to_visit.is_empty() {
+//             let current_node = nodes_to_visit.pop_front().unwrap();
+//             for child in current_node.children {
+//                 nodes_to_visit.push_back(&child);
+//             }
+//             if target_board.matches(&current_node.position) {
+//                 return current_position;
+//             }
+//         }
+//     }
+
+//     return root;
+// }
 
 /// For testing a computer that makes random but legal moves
 fn get_random_piece_to_move(board: &Board) -> [usize; 2] {

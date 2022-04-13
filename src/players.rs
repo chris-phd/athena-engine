@@ -47,14 +47,14 @@ impl ComputerPlayer {
 /// The Player interface that both the Human Player and Computer Player
 /// struct implement.
 pub trait Player {
-    fn make_move(&self, board: &Board) -> ChessMove;
+    fn make_move(&mut self, board: &Board) -> ChessMove;
     fn is_computer(&self) -> bool;
 }
 
 impl Player for HumanPlayer {
-    fn make_move(&self, _board: &Board) -> ChessMove {
+    fn make_move(&mut self, _board: &Board) -> ChessMove {
         // Should never reach this. Human moves are entered by the web GUI.
-        console_log!("HumanPlayer::make_move: Should never call this method!");
+        assert!(false);
         return ChessMove::new_empty_move();
     }
 
@@ -64,8 +64,13 @@ impl Player for HumanPlayer {
 }
 
 impl Player for ComputerPlayer {
-    fn make_move(&self, board: &Board) -> ChessMove {
+    fn make_move(&mut self, board: &Board) -> ChessMove {
         console_log!("players::ComputerPlayer::make_move: ");
+
+        if let Some(book_move) = engine::move_from_opening_book(&mut self.opening_book, &board) {
+            return book_move;
+        }
+
         let depth = 3;
         return engine::best_move(&board, depth);
     }
