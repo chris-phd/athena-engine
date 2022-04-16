@@ -1,7 +1,5 @@
 ## Currently working on:
-- add opening book to improve game openings
-  - https://www.hiarcs.com/chess-opening-book-free.html
-  - http://www.pgnmentor.com/files.html#openings
+
 
 ## Deployment
 - app not deploying succesfully on digital ocean. Maybe try using the bitnami image, since that launched on it's own?

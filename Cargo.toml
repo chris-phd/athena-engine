@@ -3,7 +3,7 @@
 name = "athena-engine"
 description = "A chess engine written in rust wasm."
 version = "0.1.0"
-authors = ["Chris Cooper <cjcooper1998@gmail.com>"]
+authors = ["Chris Cooper <chris@cooper.info>"]
 categories = ["wasm"]
 readme = "README.md"
 edition = "2018"
@@ -15,6 +15,8 @@ crate-type = ["cdylib", "rlib"]
 # This makes the compiled code faster and smaller, but it makes compiling slower,
 # so it's only enabled in release mode.
 lto = true
+# For producing flamegraph plots
+debug = true
 
 [features]
 # If you uncomment this line, it will enable `wee_alloc`:
@@ -28,7 +30,7 @@ wasm-bindgen = "0.2.45"
 # `wee_alloc` is a tiny allocator for wasm that is only ~1K in code size
 # compared to the default allocator's ~10K. However, it is slower than the default
 # allocator, so it's not enabled by default.
-wee_alloc = { version = "0.4.2", optional = true }
+# wee_alloc = { version = "0.4.2", optional = true }
 
 # The `web-sys` crate allows you to interact with the various browser APIs,
 # like the DOM.

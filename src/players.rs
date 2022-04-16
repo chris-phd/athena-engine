@@ -27,7 +27,7 @@ impl ComputerPlayer {
     pub fn new() -> ComputerPlayer {
         console_log!("ComputerPlayer::new:");
         let max_depth: usize = 10;
-        let mut maybe_book = read_opening_book(max_depth);
+        let maybe_book = read_opening_book(max_depth);
         return match maybe_book {
             Some(book) => { 
                 console_log!("    Successfully read the opening book!");

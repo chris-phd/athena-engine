@@ -2,15 +2,15 @@ use wasm_bindgen::prelude::*;
 use js_sys::Math;
 extern crate console_error_panic_hook;
 
-mod board;
-mod book;
-mod engine;
-mod evaluate;
-mod pieces;
-mod players;
-mod search;
-mod utils;
-mod rules;
+pub mod board;
+pub mod book;
+pub mod engine;
+pub mod evaluate;
+pub mod pieces;
+pub mod players;
+pub mod search;
+pub mod utils;
+pub mod rules;
 
 use board::Board;
 use players::{Player, HumanPlayer, ComputerPlayer};
