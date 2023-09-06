@@ -22,6 +22,11 @@ pub fn find_best_move(root : &Node) -> ChessMove {
     }
 
     let num_possible_moves = root.children.len();
+    if num_possible_moves ==  0 {
+        console_log!("search::find_best_move: No legal moves.");
+        return ChessMove::new_empty_move();
+    }
+
     println!("find_best_move:");
     println!("    num possible moves = {}", num_possible_moves);
     for i in 0..num_possible_moves {

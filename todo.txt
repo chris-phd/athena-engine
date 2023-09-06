@@ -8,6 +8,7 @@
 
 ## Bugs
 - perft not generating the correct number of legal moves after cetain depth. [maybe black tries to capture the king? who knows]
+- castling seems to be broken now??
 
 ## Features
 - Improve aesthetics of the timer.

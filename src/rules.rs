@@ -1,6 +1,6 @@
 use crate::console_log;
 use crate::utils::log;
-use crate::pieces::{self, ChessMove};
+use crate::pieces::{self, ChessMove, MoveType};
 use crate::board::Board;
 
 /// Checks if the requested move is legal based on the current position
@@ -60,6 +60,9 @@ pub fn possible_moves_from_square(board: &Board, rank_file: [usize; 2]) -> Vec<C
     // Cull any moves that end in the king in check
     let mut moves_without_check : Vec<ChessMove> = vec![];
     for chess_move in moves {
+        if chess_move.move_type == MoveType::Invalid {
+            console_log!("    move with piece {} is invalid", piece_type);
+        }
         let mut board_after_move = board.clone();
         board_after_move.make_move(chess_move);
         board_after_move.set_is_white_to_move(board.white_to_move());

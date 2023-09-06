@@ -49,6 +49,7 @@ impl ChessMove {
     pub fn new(board: &Board, src: [usize; 2], dest: [usize; 2]) -> ChessMove {
         let mut new_move = ChessMove::new_empty_move();
         new_move.set_move(&board, src, dest);
+        new_move.move_type = MoveType::Standard;
         return new_move;
     }
 
@@ -57,7 +58,7 @@ impl ChessMove {
             src: [0, 0],
             dest: [0, 0],
             piece: '-',
-            move_type: MoveType::Standard,
+            move_type: MoveType::Invalid,
         }
     }
 
@@ -96,6 +97,11 @@ impl ChessMove {
             dest[0] == board.get_en_passant_square()[0] && 
             dest[1] == board.get_en_passant_square()[1] {
             self.move_type = MoveType::EnPassant;
+        }
+
+        if ((self.piece == 'p' && dest[0] == 1) || 
+            (self.piece == 'P' && dest[0] == 8)) {
+
         }
     }
 
